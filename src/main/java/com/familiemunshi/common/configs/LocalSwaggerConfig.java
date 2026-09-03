@@ -33,7 +33,7 @@ public class LocalSwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI().info(new Info().title(APP_NAME)
-                .description("Familie Munshi API Documentation")
+                .description("Families Munshi API Documentation")
                 .version("v1.0.0"));
     }
 }

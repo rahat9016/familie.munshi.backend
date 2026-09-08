@@ -6,6 +6,8 @@ public class Constants {
     // API VERSIONING
     public static final String API = "/api";
     public static final String API_VERSION = "/v1";
+    public static final String PUBLIC = "/public";
+    public static final String AUTH = "/auth";
     public static final String API_BASE = API + API_VERSION;
 
     // Swagger & Actuator

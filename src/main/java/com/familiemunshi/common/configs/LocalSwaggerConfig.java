@@ -8,7 +8,7 @@ import org.springdoc.core.models.GroupedOpenApi;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 
-import static com.familiemunshi.common.utils.Constands.APP_NAME;
+import static com.familiemunshi.common.utils.Constants.APP_NAME;
 
 
 @Configuration

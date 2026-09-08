@@ -1,6 +1,6 @@
 package com.familiemunshi.common.utils;
 
-public class Constands {
+public class Constants {
     public static final String APP_NAME = "Familie Munshi API";
 
     // API VERSIONING

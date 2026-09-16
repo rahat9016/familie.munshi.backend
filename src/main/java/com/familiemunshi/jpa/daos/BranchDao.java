@@ -18,8 +18,10 @@ public class BranchDao {
     @Column(nullable=false, unique=true)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(nullable = false)
-    private boolean isActive;
+    @Builder.Default
+    @Column(name="is_active", nullable = false)
+    private boolean isActive = true;
 }

@@ -46,7 +46,7 @@ public class RoleDao {
             inverseJoinColumns = @JoinColumn(name = "permission_id"),
             uniqueConstraints = @UniqueConstraint(
                     name = "uk_role_permission",
-                    columnNames = {"role_id", "permissiTon_id"}
+                    columnNames = {"role_id", "permission_id"}
             )
     )
     private Set<PermissionsDao> permissions = new HashSet<>();

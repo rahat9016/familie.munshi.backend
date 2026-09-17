@@ -10,7 +10,6 @@ import io.swagger.v3.oas.models.info.Info;
 
 import static com.familiemunshi.common.utils.Constants.APP_NAME;
 
-
 @Configuration
 @Profile("local")
 public class LocalSwaggerConfig {

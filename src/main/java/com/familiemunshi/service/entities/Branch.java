@@ -8,6 +8,7 @@ public record Branch (
     Long id,
     String name,
     String address,
+    String logoUrl,
     boolean isActive
 ) {
 }

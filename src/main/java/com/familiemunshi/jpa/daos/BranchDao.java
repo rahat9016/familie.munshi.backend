@@ -21,6 +21,9 @@ public class BranchDao {
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    @Column(name="logo_url")
+    private String logoUrl;
+
     @Builder.Default
     @Column(name="is_active", nullable = false)
     private boolean isActive = true;

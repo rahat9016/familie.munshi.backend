@@ -14,6 +14,7 @@ public class BranchMapper {
                 .id(dao.getId())
                 .name(dao.getName())
                 .address(dao.getAddress())
+                .logoUrl(dao.getLogoUrl())
                 .isActive(dao.isActive())
                 .build();
     }
@@ -24,6 +25,7 @@ public class BranchMapper {
                 .id(domain.id())
                 .name(domain.name())
                 .address(domain.address())
+                .logoUrl(domain.logoUrl())
                 .isActive(domain.isActive())
                 .build();
     }

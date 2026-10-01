@@ -3,3 +3,16 @@ spring:
     name: familiemunshi
   profiles:
     active: local
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+storage:
+  type: ${STORAGE_TYPE:minio}
+
+file:
+  upload-dir: uploads
+  allowed-extensions: jpg,jpeg,png,webp,pdf
+  max-size-bytes: 10485760

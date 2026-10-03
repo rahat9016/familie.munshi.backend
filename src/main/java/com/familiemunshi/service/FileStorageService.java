@@ -1,4 +1,4 @@
-package com.familiemunshi;
+package com.familiemunshi.service;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;

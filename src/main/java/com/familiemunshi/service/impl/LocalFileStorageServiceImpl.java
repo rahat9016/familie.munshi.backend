@@ -1,7 +1,7 @@
 package com.familiemunshi.service.impl;
 
 
-import com.familiemunshi.FileStorageService;
+import com.familiemunshi.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;

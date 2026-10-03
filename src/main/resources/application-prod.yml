@@ -22,3 +22,8 @@ minio:
   access-key: ${MINIO_ACCESS_KEY:${MINIO_ROOT_USER}}
   secret-key: ${MINIO_SECRET_KEY:${MINIO_ROOT_PASSWORD}}
   bucket-name: ${MINIO_BUCKET_NAME:familiemunshi-bucket}
+
+logging:
+  level:
+    root: WARN
+    com.familiemunshi: INFO

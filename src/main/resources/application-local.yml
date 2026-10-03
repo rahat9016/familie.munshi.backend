@@ -17,3 +17,8 @@ minio:
   access-key: minioadmin
   secret-key: minioadmin
   bucket-name: familiemunshi-bucket
+
+logging:
+  level:
+    root: INFO
+    com.familiemunshi: DEBUG

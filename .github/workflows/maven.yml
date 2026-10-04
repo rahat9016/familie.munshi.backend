@@ -36,6 +36,56 @@ jobs:
           distribution: "temurin"
           cache: maven
 
+      - name: Start MinIO
+        run: |
+          docker build \
+            -f- \
+            -t familiemunshi-minio:ci \
+            . <<'EOF'
+          FROM golang:alpine AS builder
+
+          RUN go install github.com/minio/minio@latest
+
+          FROM alpine:latest
+
+          RUN apk add --no-cache ca-certificates curl
+
+          COPY --from=builder /go/bin/minio /usr/local/bin/minio
+
+          VOLUME ["/data"]
+
+          EXPOSE 9000 9001
+
+          ENTRYPOINT ["/usr/local/bin/minio"]
+
+          CMD ["server", "/data", "--console-address", ":9001"]
+          EOF
+
+          docker run -d \
+            --name familiemunshi-minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            familiemunshi-minio:ci \
+            server /data --console-address ":9001"
+
+      - name: Wait for MinIO
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:9000/minio/health/live; then
+              echo "MinIO is ready"
+              exit 0
+            fi
+
+            echo "Waiting for MinIO..."
+            sleep 2
+          done
+
+          echo "MinIO failed to start"
+          docker logs familiemunshi-minio
+          exit 1
+
       - name: Verify Java and Maven
         run: |
           java -version

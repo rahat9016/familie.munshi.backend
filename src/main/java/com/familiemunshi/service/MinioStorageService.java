@@ -1,25 +1,27 @@
 package com.familiemunshi.service;
 
-import com.familiemunshi.common.exceptions.StorageException;
+import com.familiemunshi.common.configs.FileStorageProperties;
 import com.familiemunshi.common.configs.MinioProperties;
+import com.familiemunshi.common.exceptions.StorageException;
 import io.minio.*;
-
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MinioStorageService {
-
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final FileStorageProperties fileProperties;
 
     @PostConstruct
     public void initBucket() {
@@ -38,11 +40,11 @@ public class MinioStorageService {
     }
 
     public String uploadFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new StorageException("Cannot upload empty or null file");
-        }
+        validateFile(file);
 
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String sanitizedFilename = originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
+        String filename = UUID.randomUUID() + "_" + sanitizedFilename;
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -97,6 +99,24 @@ public class MinioStorageService {
         } catch (Exception e) {
             log.error("Error deleting file from MinIO: {}", filename, e);
             throw new StorageException("Failed to delete file", e);
+        }
+    }
+
+    private void validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new StorageException("Cannot upload empty or null file");
+        }
+
+        if (file.getSize() > fileProperties.getMaxSizeBytes()) {
+            throw new StorageException("File size exceeds maximum permitted size of " + fileProperties.getMaxSizeBytes() + " bytes");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.contains(".")) {
+            String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+            if (!fileProperties.getAllowedExtensions().contains(extension)) {
+                throw new StorageException("File extension '" + extension + "' is not allowed");
+            }
         }
     }
 }

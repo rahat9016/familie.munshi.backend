@@ -1,44 +1,51 @@
-################ Build Stage ################
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
-
-WORKDIR /build
-
-# Cache Maven dependencies
-COPY pom.xml ./
-COPY .mvn .mvn
-COPY mvnw ./
-RUN ./mvnw dependency:go-offline -B -q
-
-# Copy source code and build
-COPY src src
-COPY eclipse-formatter-profile.xml eclipse.importorder license-header ./
-RUN ./mvnw clean package -DskipTests -B -q \
-    && cp target/familiemunshi-backend-*-SNAPSHOT.jar /build/app.jar
-
-# Extract Spring Boot layers for fast Docker caching
-RUN java -Djarmode=tools -jar /build/app.jar extract --destination /build/extracted
-
-################ Runtime Stage ################
-FROM eclipse-temurin:21-jre-alpine
-
-# Dedicated non-root user for familiemunshi
-RUN addgroup --system --gid 1001 familiemunshi \
-    && adduser --system --uid 1001 --ingroup familiemunshi --shell /sbin/nologin familiemunshi
+# ==========================================
+# Stage 1: Build Application
+# ==========================================
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copy extracted layers
-COPY --from=builder --chown=familiemunshi:familiemunshi /build/extracted/dependencies/ ./
-COPY --from=builder --chown=familiemunshi:familiemunshi /build/extracted/spring-boot-loader/ ./
-COPY --from=builder --chown=familiemunshi:familiemunshi /build/extracted/snapshot-dependencies/ ./
-COPY --from=builder --chown=familiemunshi:familiemunshi /build/extracted/application/ ./
+# Copy Maven wrapper and dependency files first
+# This improves Docker layer caching
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
 
-USER 1001
+# Make Maven wrapper executable
+RUN chmod +x mvnw
 
-ENV SPRING_PROFILES_ACTIVE=cloud \
-    PORT=10000 \
-    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseContainerSupport -XX:+UseG1GC"
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
 
-EXPOSE 10000
+# Copy application source
+COPY src ./src
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+# Build executable JAR
+RUN ./mvnw clean package -DskipTests
+
+
+# ==========================================
+# Stage 2: Production Runtime
+# ==========================================
+FROM eclipse-temurin:21-jre-alpine AS runner
+
+# Create non-root user and group
+RUN addgroup -S appgroup && \
+    adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy JAR and assign ownership directly
+COPY --from=builder \
+     --chown=appuser:appgroup \
+     /app/target/*.jar \
+     app.jar
+
+# Run application as non-root user
+USER appuser
+
+EXPOSE 8080
+
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

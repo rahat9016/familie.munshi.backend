@@ -1,7 +1,6 @@
 package com.familiemunshi.common.configs;
 
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +20,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.familiemunshi.common.utils.Constants.*;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 
 @Configuration
 @EnableWebSecurity
@@ -30,7 +33,7 @@ public class SecurityConfig {
     private String[] allowedOrigins;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
 
@@ -49,11 +52,20 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // =========== PUBLIC — infrastructure & API docs ===========
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**").permitAll()
-                        .requestMatchers(API_BASE + PUBLIC + AUTH + "/**").permitAll()
-                        .requestMatchers(API_BASE + PUBLIC + "/**").permitAll()
-                        .anyRequest().authenticated()
+                        // =========== PUBLIC — infrastructure & API docs ===========
+                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
+
+                        // =========== PUBLIC — authentication ===========
+                        .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
+
+                        // =========== PUBLIC — read-only branch browsing ===========
+                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
+                        .requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                 )
                 .exceptionHandling(ex -> ex
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
@@ -66,4 +78,9 @@ public class SecurityConfig {
                 .build();
     }
 
+    public static class Scopes {
+        public static final String SUPER_ADMIN = "SUPER_ADMIN";
+        public static final String ADMIN = "ADMIN";
+        public static final String USER = "USER";
+    }
 }

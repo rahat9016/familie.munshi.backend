@@ -5,7 +5,16 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity
-@Table(name="branches")
+@Table(name="branches",
+        indexes = {
+            @Index(name = "idx_branch_name", columnList = "name"),
+            @Index(name = "idx_branch_code", columnList = "code"),
+            @Index(name = "idx_branch_is_active", columnList = "is_active")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_branch_name", columnNames = "name"),
+                @UniqueConstraint(name = "uk_branch_code", columnNames = "code")
+        })
 @Getter
 @Setter
 @Builder

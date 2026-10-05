@@ -7,8 +7,7 @@ import org.springdoc.core.models.GroupedOpenApi;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-
-import static com.familiemunshi.common.utils.Constants.APP_NAME;
+import static com.familiemunshi.common.utils.Constants.*;
 
 @Configuration
 @Profile("local")
@@ -17,7 +16,7 @@ public class LocalSwaggerConfig {
     public GroupedOpenApi publicApis() {
         return GroupedOpenApi.builder()
                 .group("Public APIs")
-                .pathsToMatch("/api/public/**")
+                .pathsToMatch(API_BASE + "/**")
                 .build();
     }
 
@@ -25,7 +24,7 @@ public class LocalSwaggerConfig {
     public GroupedOpenApi internalApis() {
         return GroupedOpenApi.builder()
                 .group("Internal APIs")
-                .pathsToMatch("/api/internal/**")
+                .pathsToMatch(API_BASE + "/internal/**")
                 .build();
     }
 

@@ -18,7 +18,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
-
 import static com.familiemunshi.common.utils.Constants.*;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -65,6 +64,7 @@ public class SecurityConfig {
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
                         .requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll()
+                        .requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll()
                         .requestMatchers("/error").permitAll()
                 )
                 .exceptionHandling(ex -> ex

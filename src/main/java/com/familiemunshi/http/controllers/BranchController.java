@@ -1,13 +1,13 @@
 package com.familiemunshi.http.controllers;
 
 
+import com.familiemunshi.http.dtos.requests.CreateBranchRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import static com.familiemunshi.common.utils.Constants.*;
 
@@ -16,7 +16,7 @@ import static com.familiemunshi.common.utils.Constants.*;
 @RequestMapping(API_BASE + BRANCHES)
 public class BranchController {
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Create a new branch.",
             responses = {
@@ -25,8 +25,8 @@ public class BranchController {
                     @ApiResponse(responseCode = "401", description = "Unauthenticated.")
             }
     )
-    public String createBranch() {
-        return "Branch created successfully.";
+    public CreateBranchRequest createBranch(@Valid @ModelAttribute CreateBranchRequest branchRequest) {
+        return branchRequest;
     }
 
     @GetMapping

@@ -1,4 +1,4 @@
-package com.familiemunshi.service;
+package com.familiemunshi.common.service;
 
 import com.familiemunshi.common.configs.FileStorageProperties;
 import com.familiemunshi.common.configs.MinioProperties;
@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MinioStorageService {
+public class MinioStorageService implements FileStorageService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
     private final FileStorageProperties fileProperties;

@@ -1,7 +1,7 @@
 package com.familiemunshi.http.dtos.requests;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
-
+import lombok.Builder;
 import com.familiemunshi.jpa.daos.BranchDao;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
+@Builder
 public class CreateBranchRequest {
     @Schema(description = "Branch name", requiredMode = REQUIRED, example = "Downtown Branch")
     @NotBlank(message = "Branch name is required")
@@ -38,7 +39,8 @@ public class CreateBranchRequest {
     private MultipartFile logo;
 
     @Schema(description = "Indicates if the branch is active", requiredMode = NOT_REQUIRED, example = "true")
-    private Boolean isActive;
+    @Builder.Default
+    private Boolean isActive = true;
 
     public BranchDao toEntity() {
         return BranchDao.builder()
@@ -46,7 +48,7 @@ public class CreateBranchRequest {
                 .code(this.code)
                 .address(this.address)
                 .phone(this.phone)
-                .isActive(this.isActive)
+                .isActive(Boolean.TRUE.equals(this.isActive))
                 .build();
     }
 

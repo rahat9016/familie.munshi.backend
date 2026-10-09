@@ -5,19 +5,16 @@ import com.familiemunshi.http.dtos.requests.CreateBranchRequest;
 import com.familiemunshi.jpa.daos.BranchDao;
 import com.familiemunshi.jpa.repositories.BranchRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class BranchService {
     private static final String BRANCHES_BUCKET = "branches";
-
-    @Autowired
-    private BranchRepository branchRepository;
-
-    @Autowired
-    private FileStorageService fileStorageService;
+    private final BranchRepository branchRepository;
+    private final FileStorageService fileStorageService;
 
     public BranchDao createBranch(CreateBranchRequest branchRequest){
         // HANDLE CODE EXIST
@@ -33,7 +30,7 @@ public class BranchService {
 
         // HANDLE FILE UPLOAD
         if(branchRequest.getLogo() != null && !branchRequest.getLogo().isEmpty()){
-            String filename = fileStorageService.uploadFile(branchRequest.getLogo());;
+            final String filename = fileStorageService.uploadFile(branchRequest.getLogo());;
             branchDao.setLogoUrl(filename);
         }
 

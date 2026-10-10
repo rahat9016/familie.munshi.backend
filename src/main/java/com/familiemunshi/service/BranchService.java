@@ -4,6 +4,7 @@ import com.familiemunshi.common.service.FileStorageService;
 import com.familiemunshi.http.dtos.requests.CreateBranchRequest;
 import com.familiemunshi.jpa.daos.BranchDao;
 import com.familiemunshi.jpa.repositories.BranchRepository;
+import com.familiemunshi.service.exceptions.BranchNameAlreadyExistsException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,16 +18,15 @@ public class BranchService {
     private final FileStorageService fileStorageService;
 
     public BranchDao createBranch(CreateBranchRequest branchRequest){
-        // HANDLE CODE EXIST
-        if(branchRepository.existsByCode(branchRequest.getCode())){
-            throw new IllegalArgumentException("Branch code already exists");
-        }
         // HANDLE NAME EXIST
         if(branchRepository.existsByName(branchRequest.getName())){
-            throw new IllegalArgumentException("Branch name already exists");
+            throw new BranchNameAlreadyExistsException(branchRequest.getName());
         }
-
         BranchDao branchDao = branchRequest.toEntity();
+
+        // GENERATE UNIQUE CODE
+        String uniqueCode = generateUniqueBranchCode();
+        branchDao.setCode(uniqueCode);
 
         // HANDLE FILE UPLOAD
         if(branchRequest.getLogo() != null && !branchRequest.getLogo().isEmpty()){
@@ -36,5 +36,16 @@ public class BranchService {
 
         // SAVE BRANCH
         return branchRepository.save(branchDao);
+    }
+
+
+    private String generateUniqueBranchCode(){
+        long nextId = branchRepository.count() + 1;
+        String code;
+        do{
+            code = String.format("BR-%04d", nextId);
+            nextId++;
+        } while(branchRepository.existsByCode(code));
+        return code;
     }
 }

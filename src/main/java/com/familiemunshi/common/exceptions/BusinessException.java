@@ -4,6 +4,9 @@
  */
 package com.familiemunshi.common.exceptions;
 
+import lombok.Getter;
+
+@Getter
 public abstract class BusinessException extends RuntimeException {
 
     private final String messageKey;
@@ -15,17 +18,9 @@ public abstract class BusinessException extends RuntimeException {
         this.messageParams = new Object[0];
     }
 
-    protected BusinessException(String messageKey, Object... messageParams) {
+    protected BusinessException(String messageKey, Object[] messageParams) {
         super(messageKey);
         this.messageKey = messageKey;
         this.messageParams = messageParams != null ? messageParams : new Object[0];
-    }
-
-    public String getMessageKey() {
-        return this.messageKey;
-    }
-
-    public Object[] getMessageParams() {
-        return this.messageParams;
     }
 }

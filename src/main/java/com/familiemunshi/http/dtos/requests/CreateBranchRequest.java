@@ -19,11 +19,6 @@ public class CreateBranchRequest {
     @Size(max = 255, message = "Branch name cannot exceed 255 characters")
     private String name;
 
-    @Schema(description = "Branch code", requiredMode = REQUIRED, example = "DB001")
-    @NotBlank(message = "Branch code is required")
-    @Size(max = 100, message = "Branch code cannot exceed 100 characters")
-    private String code;
-
     @Schema(description = "Branch address", requiredMode = NOT_REQUIRED, example = "123 Main St, Cityville")
     private String address;
 
@@ -45,7 +40,6 @@ public class CreateBranchRequest {
     public BranchDao toEntity() {
         return BranchDao.builder()
                 .name(this.name)
-                .code(this.code)
                 .address(this.address)
                 .phone(this.phone)
                 .isActive(Boolean.TRUE.equals(this.isActive))

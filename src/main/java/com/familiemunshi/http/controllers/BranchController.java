@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static com.familiemunshi.common.utils.Constants.*;
@@ -29,8 +31,9 @@ public class BranchController {
                     @ApiResponse(responseCode = "401", description = "Unauthenticated.")
             }
     )
-    public BranchDao createBranch(@Valid @ModelAttribute CreateBranchRequest branchRequest) {
-        return branchService.createBranch(branchRequest);
+    public ResponseEntity<BranchDao> createBranch(@Valid @ModelAttribute CreateBranchRequest branchRequest) {
+        BranchDao branchDao = branchService.createBranch(branchRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(branchDao);
     }
 
     @GetMapping

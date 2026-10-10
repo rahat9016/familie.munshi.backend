@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 FamilyMunshi. All rights reserved.
+ * Author: Minhazur Rahman <minhazur>
  */
 package com.familiemunshi.common.exceptions;
 

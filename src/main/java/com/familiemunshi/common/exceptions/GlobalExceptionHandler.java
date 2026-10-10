@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,7 +32,10 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final ErrorUtils errorUtils;
 
     // 1. DTO Payload Field Validation Failures (@Valid @RequestBody) -> 400
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -100,14 +106,16 @@ public class GlobalExceptionHandler {
     // 3. Resource Not Found Exception -> 404
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, HttpServletRequest request) {
+            ResourceNotFoundException ex, HttpServletRequest request, Locale locale) {
 
         log.warn("Resource not found on {} '{}': {}", request.getMethod(), request.getRequestURI(), ex.getMessageKey());
+
+        String resolvedMessage = errorUtils.resolveMessage(ex.getMessageKey(), ex.getMessageParams(), locale);
 
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.NOT_FOUND.value(),
                 "RESOURCE_NOT_FOUND",
-                ex.getMessageKey(),
+                resolvedMessage,
                 request.getMethod(),
                 request.getRequestURI()
         );
@@ -115,17 +123,39 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // 4. Custom Business Rule Exceptions -> 400
+    // 4. Conflict Exception -> 409
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(
+            ConflictException ex, HttpServletRequest request, Locale locale) {
+
+        log.warn("Conflict Exception on {} '{}': key='{}'", request.getMethod(), request.getRequestURI(), ex.getMessageKey());
+
+        String resolvedMessage = errorUtils.resolveMessage(ex.getMessageKey(), ex.getMessageParams(), locale);
+
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "RESOURCE_CONFLICT",
+                resolvedMessage,
+                request.getMethod(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    // 5. Custom Business Rule Exceptions -> 400
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex, HttpServletRequest request) {
+            BusinessException ex, HttpServletRequest request, Locale locale) {
 
         log.warn("Business Exception on {} '{}': key='{}'", request.getMethod(), request.getRequestURI(), ex.getMessageKey());
+
+        String resolvedMessage = errorUtils.resolveMessage(ex.getMessageKey(), ex.getMessageParams(), locale);
 
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 "BUSINESS_RULE_VIOLATION",
-                ex.getMessageKey(),
+                resolvedMessage,
                 request.getMethod(),
                 request.getRequestURI()
         );
@@ -133,7 +163,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    // 5. Spring Security Authentication Failure -> 401
+    // 6. Spring Security Authentication Failure -> 401
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             AuthenticationException ex, HttpServletRequest request) {
@@ -151,7 +181,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    // 6. Spring Security Access Denied -> 403
+    // 7. Spring Security Access Denied -> 403
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex, HttpServletRequest request) {
@@ -169,7 +199,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    // 7. Malformed JSON Request -> 400
+    // 8. Malformed JSON Request -> 400
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
@@ -187,7 +217,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    // 8. Method Argument Type Mismatch -> 400
+    // 9. Method Argument Type Mismatch -> 400
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
@@ -206,7 +236,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    // 9. HTTP Method Not Supported -> 405 (Preserves Allow Header)
+    // 10. HTTP Method Not Supported -> 405 (Preserves Allow Header)
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(
             HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
@@ -229,7 +259,7 @@ public class GlobalExceptionHandler {
         return builder.body(response);
     }
 
-    // 10. Unsupported Media Type -> 415
+    // 11. Unsupported Media Type -> 415
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
@@ -247,7 +277,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
     }
 
-    // 11. Endpoint Route Not Found -> 404
+    // 12. Endpoint Route Not Found -> 404
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest request) {
@@ -263,7 +293,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // 12. Database Constraint Violations -> 409
+    // 13. Database Constraint Violations -> 409
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
             DataIntegrityViolationException ex, HttpServletRequest request) {
@@ -282,7 +312,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    // 13. Database Service Unavailability -> 503
+    // 14. Database Service Unavailability -> 503
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccessException(
             DataAccessException ex, HttpServletRequest request) {
@@ -301,7 +331,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
-    // 14. Downstream Service Unavailability -> 503
+    // 15. Downstream Service Unavailability -> 503
     @ExceptionHandler({RestClientException.class, WebClientResponseException.class})
     public ResponseEntity<ErrorResponse> handleExternalServiceException(
             Exception ex, HttpServletRequest request) {
@@ -320,7 +350,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
-    // 15. File System & MinIO S3 I/O Failures -> 500
+    // 16. File System & MinIO S3 I/O Failures -> 500
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ErrorResponse> handleIOException(
             IOException ex, HttpServletRequest request) {
@@ -339,18 +369,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // 16. Custom Infrastructure Exceptions -> 500
+    // 17. Custom Infrastructure Exceptions -> 500
     @ExceptionHandler(SystemException.class)
     public ResponseEntity<ErrorResponse> handleSystemException(
-            SystemException ex, HttpServletRequest request) {
+            SystemException ex, HttpServletRequest request, Locale locale) {
 
         log.error("System Exception [{}] on {} '{}': {}",
                 ex.getCode(), request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
 
+        String resolvedMessage = errorUtils.resolveMessage(ex.getCode(), ex.getParams(), locale);
+        if (resolvedMessage.equals(ex.getCode())) {
+            resolvedMessage = "An internal infrastructure error occurred. Please try again later.";
+        }
+
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 ex.getCode(),
-                "An internal infrastructure error occurred. Please try again later.",
+                resolvedMessage,
                 request.getMethod(),
                 request.getRequestURI()
         );
@@ -358,17 +393,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // 17. Unhandled Runtime Fallback -> 500
+    // 18. Unhandled Runtime Fallback -> 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnhandledException(
-            Exception ex, HttpServletRequest request) {
+            Exception ex, HttpServletRequest request, Locale locale) {
 
         log.error("Unhandled Runtime Bug on {} '{}'", request.getMethod(), request.getRequestURI(), ex);
+
+        String resolvedMessage = errorUtils.resolveMessage("internalServerError", null, locale);
+        if (resolvedMessage.equals("internalServerError")) {
+            resolvedMessage = "An unexpected error occurred. Please contact support.";
+        }
 
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "INTERNAL_SERVER_ERROR",
-                "An unexpected error occurred. Please contact support.",
+                resolvedMessage,
                 request.getMethod(),
                 request.getRequestURI()
         );

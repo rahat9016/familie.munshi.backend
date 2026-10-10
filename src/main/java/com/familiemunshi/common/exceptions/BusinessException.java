@@ -18,7 +18,7 @@ public abstract class BusinessException extends RuntimeException {
     protected BusinessException(String messageKey, Object... messageParams) {
         super(messageKey);
         this.messageKey = messageKey;
-        this.messageParams = messageParams;
+        this.messageParams = messageParams != null ? messageParams : new Object[0];
     }
 
     public String getMessageKey() {

@@ -3,11 +3,12 @@ package com.familiemunshi.service.entities;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @With
 @Builder
 public record Branch (
-    Long id,
+    UUID id,
     String name,
     String address,
     String phone,

@@ -3,6 +3,7 @@ package com.familiemunshi.jpa.daos;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name="branches",
@@ -22,9 +23,8 @@ import java.time.Instant;
 @AllArgsConstructor
 public class BranchDao {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id", nullable=false, updatable=false)
-    private Long id;
+    private UUID id;
 
     @Column(nullable=false, unique=true)
     private String name;

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 
 @Getter
@@ -25,8 +26,8 @@ import java.time.Instant;
 )
 public class UserDao {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, updatable = false)
+    private UUID id;
 
     @Column(name = "first_name", nullable = false, length = 120)
     private String firstName;
@@ -52,11 +53,12 @@ public class UserDao {
 
     @PrePersist
     protected void onCreate() {
-        Instant now = Instant.now();
-        if (createdAt == null) {
-            createdAt = now;
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
         }
-        updatedAt = now;
+        if (this.updatedAt == null) {
+            this.updatedAt = Instant.now();
+        }
     }
 
     @PreUpdate

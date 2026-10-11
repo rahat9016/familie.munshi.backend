@@ -29,6 +29,9 @@ public class UserDao {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
+    @Column(name = "profile_picture", length = 255)
+    private String profilePicture;
+
     @Column(name = "first_name", nullable = false, length = 120)
     private String firstName;
 
@@ -50,6 +53,9 @@ public class UserDao {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "phone", length = 20)
+    private String phone;
 
     @PrePersist
     protected void onCreate() {

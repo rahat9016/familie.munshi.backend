@@ -11,6 +11,8 @@ public class Constants {
 
     // AUTHENTICATION
     public static final String AUTH = "/auth";
+    public static final String LOGIN = "/login";
+    public static final String SIGNUP = "/signup";
 
     // BRANCHES
     public static final String BRANCHES = "/branches";

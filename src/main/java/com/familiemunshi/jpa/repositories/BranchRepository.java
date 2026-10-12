@@ -13,5 +13,4 @@ public interface BranchRepository extends  JpaRepository<BranchDao, Long> {
     boolean existsByCodeAndIdNot(String code, Long id);
 
     boolean existsByNameAndIdNot(String name, Long id);
-
 }

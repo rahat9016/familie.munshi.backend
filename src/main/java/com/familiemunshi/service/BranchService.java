@@ -30,7 +30,7 @@ public class BranchService {
 
         // HANDLE FILE UPLOAD
         if(branchRequest.getLogo() != null && !branchRequest.getLogo().isEmpty()){
-            final String filename = fileStorageService.uploadFile(branchRequest.getLogo());;
+            final String filename = fileStorageService.uploadFile(branchRequest.getLogo());
             branchDao.setLogoUrl(filename);
         }
 

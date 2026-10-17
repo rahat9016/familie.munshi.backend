@@ -2,7 +2,10 @@ package com.familiemunshi.service;
 
 import com.familiemunshi.common.utils.Util;
 import com.familiemunshi.http.dtos.requests.SignupRequest;
+import com.familiemunshi.http.dtos.responses.UserResponse;
+import com.familiemunshi.jpa.daos.UserDao;
 import com.familiemunshi.jpa.repositories.UserRepository;
+import com.familiemunshi.mapper.UserMapper;
 import com.familiemunshi.service.entities.User;
 import com.familiemunshi.service.exceptions.UserEmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,8 @@ public class AuthService {
     private final UserRepository userRepository;
 
     // SIGNUP
-    public void signup(SignupRequest signupRequest) {
+    public UserResponse signup(SignupRequest signupRequest) {
+        User user = signupRequest.toEntity();
 
         String normalizedEmail = normalizeEmail(signupRequest.getEmail());
 
@@ -25,15 +29,20 @@ public class AuthService {
             throw new UserEmailAlreadyExistsException(normalizedEmail);
         }
 
-        User user = signupRequest.toEntity();
-
+        // Hash the password with a salt
         String salt = Util.generateSalt();
-        String hasedPasword = Util.hashPassword(signupRequest.getPassword(), salt);
+        String hashedPassword = Util.hashPassword(signupRequest.getPassword(), salt);
 
+        // Create a new User object with the hashed password
+        User hashedUser = user.withPassword(hashedPassword);
 
+        UserDao userDao = UserMapper.toDao(user, salt);
 
+        // Save the user to the database
+        UserDao savedUser = userRepository.save(userDao);
 
-
+        // Return the response
+        return new UserResponse(UserMapper.toEntity(savedUser));
     }
 
     // LOGIN

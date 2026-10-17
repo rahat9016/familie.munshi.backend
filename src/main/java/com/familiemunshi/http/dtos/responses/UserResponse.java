@@ -15,7 +15,7 @@ public class UserResponse {
     private String email;
     private boolean isActive;
 
-    UserResponse(User user){
+    public UserResponse(User user){
         this.id = user.id();
         this.firstName = user.firstName();
         this.lastName = user.lastName();

@@ -10,7 +10,7 @@ import lombok.*;
 
 @Setter
 @Getter
-@Builder
+@NoArgsConstructor
 public class SignupRequest {
     @Schema(description = "First name of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "John")
     @NotBlank(message = "First name is required")

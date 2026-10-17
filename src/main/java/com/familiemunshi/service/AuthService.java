@@ -1,8 +1,9 @@
 package com.familiemunshi.service;
 
+import com.familiemunshi.common.utils.Util;
 import com.familiemunshi.http.dtos.requests.SignupRequest;
-import com.familiemunshi.jpa.daos.UserDao;
 import com.familiemunshi.jpa.repositories.UserRepository;
+import com.familiemunshi.service.entities.User;
 import com.familiemunshi.service.exceptions.UserEmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,22 @@ public class AuthService {
 
     // SIGNUP
     public void signup(SignupRequest signupRequest) {
+
         String normalizedEmail = normalizeEmail(signupRequest.getEmail());
+
 
         if(userRepository.findByEmail(normalizedEmail).isPresent()){
             throw new UserEmailAlreadyExistsException(normalizedEmail);
         }
 
-        UserDao userDao = signupRequest.toEntity();
+        User user = signupRequest.toEntity();
+
+        String salt = Util.generateSalt();
+        String hasedPasword = Util.hashPassword(signupRequest.getPassword(), salt);
+
+
+
+
 
     }
 

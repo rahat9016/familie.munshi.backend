@@ -1,6 +1,7 @@
 package com.familiemunshi.http.dtos.requests;
 
 import com.familiemunshi.jpa.daos.UserDao;
+import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,8 +33,8 @@ public class SignupRequest {
     @Size(max = 255, min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
-    public UserDao toEntity() {
-        return UserDao.builder()
+    public User toEntity() {
+        return User.builder()
                 .firstName(this.firstName)
                 .lastName(this.lastName)
                 .email(this.email)

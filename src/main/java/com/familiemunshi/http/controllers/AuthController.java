@@ -27,7 +27,7 @@ public class AuthController {
             }
     )
     public void createBranch(@Valid @ModelAttribute SignupRequest signupRequest) {
-        System.out.println(signupRequest.toString());
+
     }
 
 }

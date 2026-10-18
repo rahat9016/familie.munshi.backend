@@ -1,11 +1,12 @@
 package com.familiemunshi.http.controllers;
 
 
+import com.familiemunshi.common.utils.JwtUtil;
 import com.familiemunshi.http.dtos.requests.LoginRequest;
 import com.familiemunshi.http.dtos.requests.SignupRequest;
 import com.familiemunshi.http.dtos.responses.SignupResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
-import com.familiemunshi.http.dtos.responses.UserResponse;
+import com.familiemunshi.http.dtos.responses.UserLoginResponse;
 import com.familiemunshi.service.AuthService;
 import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,51 +29,30 @@ import static com.familiemunshi.common.utils.Constants.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping(SIGNUP)
-    @Operation(
-            summary = "Sign up a new user.",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "User created."),
-                    @ApiResponse(responseCode = "400", description = "Invalid input."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated."),
-                    @ApiResponse(responseCode = "409", description = "User already exists.")
-            }
-    )
-    public ResponseEntity<SuccessResponse<SignupResponse>>  signup(@Valid @RequestBody SignupRequest signupRequest) {
+    @Operation(summary = "Sign up a new user.", responses = {@ApiResponse(responseCode = "201", description = "User created."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Unauthenticated."), @ApiResponse(responseCode = "409", description = "User already exists.")})
+    public ResponseEntity<SuccessResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest signupRequest) {
         User savedUser = authService.signup(signupRequest.toEntity());
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        SuccessResponse.of(
-                                "User registered successfully",
-                                new SignupResponse(savedUser)
-                        )
-                );
+        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("User registered successfully", new SignupResponse(savedUser)));
     }
 
     @PostMapping(LOGIN)
-    @Operation(
-            summary = "Login user.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "User logged in."
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid input."
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Invalid credentials."
-                    )
-            }
-    )
-    public ResponseEntity<SuccessResponse<UserResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
+    @Operation(summary = "Login user.", responses = {@ApiResponse(responseCode = "200", description = "User logged in."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Invalid credentials.")})
+    public ResponseEntity<SuccessResponse<UserLoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         User loggedUser = authService.login(loginRequest.toEntity());
-        return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserResponse(loggedUser)));
+        // generate JWT access token and refresh token
+        String accessToken = jwtUtil.generateUserToken(
+                loggedUser.id(),
+                loggedUser.email()
+        );
+        String refreshToken = jwtUtil.generateUserRefreshToken(
+                loggedUser.id(),
+                loggedUser.email()
+        );
+        return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserLoginResponse(loggedUser.id(), accessToken, refreshToken)));
     }
 
 }

@@ -7,7 +7,8 @@ public class UserMapper {
     public UserMapper() {
         throw new IllegalStateException("Utility class should not be instantiated");
     }
-    public static User toEntity(UserDao userDao){
+
+    public static User toEntity(UserDao userDao) {
         return User.builder()
                 .id(userDao.getId())
                 .profilePicture(userDao.getProfilePicture())
@@ -20,7 +21,8 @@ public class UserMapper {
                 .updatedAt(userDao.getUpdatedAt())
                 .build();
     }
-    public static UserDao toDao(User user, String salt){
+
+    public static UserDao toDao(User user, String salt) {
         return UserDao.builder()
                 .id(user.id())
                 .profilePicture(user.profilePicture())

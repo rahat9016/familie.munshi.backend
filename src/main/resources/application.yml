@@ -16,6 +16,11 @@ spring:
 storage:
   type: ${STORAGE_TYPE:minio}
 
+jwt:
+  secret: ${JWT_SECRET:mysecretkey}
+  expiration: 900000
+  refresh-expiration: 604800000
+
 file:
   upload-dir: uploads
   allowed-extensions: jpg,jpeg,png,webp,pdf

@@ -29,6 +29,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Slf4j
 @RestControllerAdvice
@@ -167,6 +168,22 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    // 6.1 Spring Security Bad Credentials -> 401
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ErrorResponse.of(
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "INVALID_CREDENTIALS",
+                                "Invalid email or password"
+                        )
+                );
     }
 
     // 7. Spring Security Access Denied -> 403

@@ -59,8 +59,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "VALIDATION_FAILED",
                 "Input validation failed for one or more fields",
-                request.getMethod(),
-                request.getRequestURI(),
                 fieldErrors
         );
 
@@ -95,8 +93,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "CONSTRAINT_VIOLATION",
                 "Parameter validation failed",
-                request.getMethod(),
-                request.getRequestURI(),
                 fieldErrors
         );
 
@@ -115,9 +111,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.NOT_FOUND.value(),
                 "RESOURCE_NOT_FOUND",
-                resolvedMessage,
-                request.getMethod(),
-                request.getRequestURI()
+                resolvedMessage
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -135,9 +129,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.CONFLICT.value(),
                 "RESOURCE_CONFLICT",
-                resolvedMessage,
-                request.getMethod(),
-                request.getRequestURI()
+                resolvedMessage
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
@@ -155,9 +147,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 "BUSINESS_RULE_VIOLATION",
-                resolvedMessage,
-                request.getMethod(),
-                request.getRequestURI()
+                resolvedMessage
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -173,9 +163,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.UNAUTHORIZED.value(),
                 "UNAUTHORIZED",
-                "Full authentication is required to access this resource",
-                request.getMethod(),
-                request.getRequestURI()
+                "Full authentication is required to access this resource"
         );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -191,9 +179,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.FORBIDDEN.value(),
                 "FORBIDDEN",
-                "You do not have permission to access this resource",
-                request.getMethod(),
-                request.getRequestURI()
+                "You do not have permission to access this resource"
         );
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -209,9 +195,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 "MALFORMED_JSON_REQUEST",
-                "Failed to read HTTP request body. Verify JSON syntax.",
-                request.getMethod(),
-                request.getRequestURI()
+                "Failed to read HTTP request body. Verify JSON syntax."
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -228,9 +212,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 "TYPE_MISMATCH",
-                message,
-                request.getMethod(),
-                request.getRequestURI()
+                message
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -246,9 +228,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
                 "METHOD_NOT_ALLOWED",
-                message,
-                request.getMethod(),
-                request.getRequestURI()
+                message
         );
 
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
@@ -269,9 +249,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
                 "UNSUPPORTED_MEDIA_TYPE",
-                message,
-                request.getMethod(),
-                request.getRequestURI()
+                message
         );
 
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
@@ -285,9 +263,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.NOT_FOUND.value(),
                 "ENDPOINT_NOT_FOUND",
-                String.format("No route found for %s %s", request.getMethod(), request.getRequestURI()),
-                request.getMethod(),
-                request.getRequestURI()
+                String.format("No route found for %s %s", request.getMethod(), request.getRequestURI())
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -304,9 +280,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.CONFLICT.value(),
                 "DATA_INTEGRITY_VIOLATION",
-                "Database constraint violation. Operation conflicts with existing data.",
-                request.getMethod(),
-                request.getRequestURI()
+                "Database constraint violation. Operation conflicts with existing data."
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
@@ -323,9 +297,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
                 "DATABASE_UNAVAILABLE",
-                "Database service is currently unavailable. Please try again later.",
-                request.getMethod(),
-                request.getRequestURI()
+                "Database service is currently unavailable. Please try again later."
         );
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
@@ -342,9 +314,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
                 "EXTERNAL_SERVICE_UNAVAILABLE",
-                "Downstream service is currently unavailable. Please try again later.",
-                request.getMethod(),
-                request.getRequestURI()
+                "Downstream service is currently unavailable. Please try again later."
         );
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
@@ -361,9 +331,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "STORAGE_ERROR",
-                "File storage system encountered an error processing your request.",
-                request.getMethod(),
-                request.getRequestURI()
+                "File storage system encountered an error processing your request."
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -385,9 +353,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 ex.getCode(),
-                resolvedMessage,
-                request.getMethod(),
-                request.getRequestURI()
+                resolvedMessage
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -408,9 +374,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "INTERNAL_SERVER_ERROR",
-                resolvedMessage,
-                request.getMethod(),
-                request.getRequestURI()
+                resolvedMessage
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

@@ -34,5 +34,4 @@ public class UserMapper {
                 .updatedAt(user.updatedAt())
                 .build();
     }
-
 }

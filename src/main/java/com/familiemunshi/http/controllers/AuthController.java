@@ -2,8 +2,10 @@ package com.familiemunshi.http.controllers;
 
 
 import com.familiemunshi.http.dtos.requests.SignupRequest;
+import com.familiemunshi.http.dtos.responses.SignupResponse;
 import com.familiemunshi.http.dtos.responses.UserResponse;
 import com.familiemunshi.service.AuthService;
+import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,10 +34,12 @@ public class AuthController {
                     @ApiResponse(responseCode = "409", description = "User already exists.")
             }
     )
-    public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
+        User savedUser = authService.signup(signupRequest.toEntity());
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(authService.signup(signupRequest)) ;
+                .body(new SignupResponse(savedUser)) ;
     }
 
 }

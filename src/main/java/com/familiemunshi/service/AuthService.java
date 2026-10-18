@@ -19,11 +19,9 @@ public class AuthService {
     private final UserRepository userRepository;
 
     // SIGNUP
-    public UserResponse signup(SignupRequest signupRequest) {
-        User user = signupRequest.toEntity();
+    public User signup(User user) {
 
-        String normalizedEmail = normalizeEmail(signupRequest.getEmail());
-
+        String normalizedEmail = normalizeEmail(user.email());
 
         if(userRepository.findByEmail(normalizedEmail).isPresent()){
             throw new UserEmailAlreadyExistsException(normalizedEmail);
@@ -31,18 +29,19 @@ public class AuthService {
 
         // Hash the password with a salt
         String salt = Util.generateSalt();
-        String hashedPassword = Util.hashPassword(signupRequest.getPassword(), salt);
-
+        String hashedPassword = Util.hashPassword(user.password(), salt);
         // Create a new User object with the hashed password
-        User hashedUser = user.withPassword(hashedPassword);
+        User hashedUser = user
+                .withEmail(normalizedEmail)
+                .withPassword(hashedPassword);
 
-        UserDao userDao = UserMapper.toDao(user, salt);
+        UserDao userDao = UserMapper.toDao(hashedUser, salt);
 
         // Save the user to the database
         UserDao savedUser = userRepository.save(userDao);
 
-        // Return the response
-        return new UserResponse(UserMapper.toEntity(savedUser));
+        // Return the saved user as a User entity
+        return UserMapper.toEntity(savedUser);
     }
 
     // LOGIN

@@ -13,6 +13,7 @@ public class Constants {
     public static final String AUTH = "/auth";
     public static final String LOGIN = "/login";
     public static final String SIGNUP = "/signup";
+    public static final String REFRESH = "/refresh";
 
     // BRANCHES
     public static final String BRANCHES = "/branches";

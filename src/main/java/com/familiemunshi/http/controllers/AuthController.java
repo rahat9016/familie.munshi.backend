@@ -3,7 +3,9 @@ package com.familiemunshi.http.controllers;
 
 import com.familiemunshi.common.utils.JwtUtil;
 import com.familiemunshi.http.dtos.requests.LoginRequest;
+import com.familiemunshi.http.dtos.requests.RefreshTokenRequest;
 import com.familiemunshi.http.dtos.requests.SignupRequest;
+import com.familiemunshi.http.dtos.responses.RefreshTokenResponse;
 import com.familiemunshi.http.dtos.responses.SignupResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
 import com.familiemunshi.http.dtos.responses.UserLoginResponse;
@@ -36,7 +38,8 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest signupRequest) {
         User savedUser = authService.signup(signupRequest.toEntity());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("User registered successfully", new SignupResponse(savedUser)));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SuccessResponse.of("User registered successfully", new SignupResponse(savedUser)));
     }
 
     @PostMapping(LOGIN)
@@ -54,5 +57,28 @@ public class AuthController {
         );
         return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserLoginResponse(loggedUser.id(), accessToken, refreshToken)));
     }
+
+//    @PostMapping(REFRESH)
+//    @Operation(summary = "Refresh user token.",
+//            responses = {
+//            @ApiResponse(responseCode = "200", description = "Token refreshed."),
+//            @ApiResponse(responseCode = "400", description = "Invalid input."),
+//            @ApiResponse(responseCode = "401", description = "Invalid credentials.")
+//    })
+//    public ResponseEntity<SuccessResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+//        String refreshToken = refreshTokenRequest.getRefreshToken();
+//        try {
+//            if(!jwtUtil.validateUserToken(refreshToken)){
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
+//            }
+//        } catch (Exception e){
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
+//        }
+//        // generate JWT access token and refresh token
+//
+//        String refreshToken = jwtUtil.generateUserRefreshToken(
+//                '', '');
+//        return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserLoginResponse(loggedUser.id(), accessToken, refreshToken)));
+//    }
 
 }

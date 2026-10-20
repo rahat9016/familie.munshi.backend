@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 
@@ -184,6 +185,31 @@ public class GlobalExceptionHandler {
                                 "Invalid email or password"
                         )
                 );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(
+            ResponseStatusException ex,
+            HttpServletRequest request
+    ) {
+        log.warn(
+                "Response status exception on {} '{}': {}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex.getReason()
+        );
+
+        ErrorResponse response = ErrorResponse.of(
+                ex.getStatusCode().value(),
+                "INVALID_REFRESH_TOKEN",
+                ex.getReason() != null
+                        ? ex.getReason()
+                        : "Request failed"
+        );
+
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(response);
     }
 
     // 7. Spring Security Access Denied -> 403

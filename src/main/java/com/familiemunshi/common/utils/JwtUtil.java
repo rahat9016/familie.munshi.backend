@@ -68,4 +68,22 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public boolean validateUserRefreshToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+
+            return "userToken".equals(
+                    claims.get("jwtToken", String.class)
+            )
+                    && "refresh".equals(
+                    claims.get("tokenPurpose", String.class)
+            )
+                    && claims.getSubject() != null
+                    && claims.getId() != null;
+
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
 }

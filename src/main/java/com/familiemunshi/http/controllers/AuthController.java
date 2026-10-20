@@ -10,6 +10,7 @@ import com.familiemunshi.http.dtos.responses.SignupResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
 import com.familiemunshi.http.dtos.responses.UserLoginResponse;
 import com.familiemunshi.service.AuthService;
+import com.familiemunshi.service.UserService;
 import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,6 +23,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
 
 import static com.familiemunshi.common.utils.Constants.*;
 
@@ -32,9 +36,10 @@ import static com.familiemunshi.common.utils.Constants.*;
 public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @PostMapping(SIGNUP)
-    @Operation(summary = "Sign up a new user.", responses = {@ApiResponse(responseCode = "201", description = "User created."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Unauthenticated."), @ApiResponse(responseCode = "409", description = "User already exists.")})
+    @Operation(summary = "Sign up a new user.x", responses = {@ApiResponse(responseCode = "201", description = "User created."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Unauthenticated."), @ApiResponse(responseCode = "409", description = "User already exists.")})
     public ResponseEntity<SuccessResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest signupRequest) {
         User savedUser = authService.signup(signupRequest.toEntity());
 
@@ -45,6 +50,7 @@ public class AuthController {
     @PostMapping(LOGIN)
     @Operation(summary = "Login user.", responses = {@ApiResponse(responseCode = "200", description = "User logged in."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Invalid credentials.")})
     public ResponseEntity<SuccessResponse<UserLoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
+        System.out.println("Login request: " + loginRequest.toEntity());
         User loggedUser = authService.login(loginRequest.toEntity());
         // generate JWT access token and refresh token
         String accessToken = jwtUtil.generateUserToken(
@@ -58,27 +64,43 @@ public class AuthController {
         return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserLoginResponse(loggedUser.id(), accessToken, refreshToken)));
     }
 
-//    @PostMapping(REFRESH)
-//    @Operation(summary = "Refresh user token.",
-//            responses = {
-//            @ApiResponse(responseCode = "200", description = "Token refreshed."),
-//            @ApiResponse(responseCode = "400", description = "Invalid input."),
-//            @ApiResponse(responseCode = "401", description = "Invalid credentials.")
-//    })
-//    public ResponseEntity<SuccessResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-//        String refreshToken = refreshTokenRequest.getRefreshToken();
-//        try {
-//            if(!jwtUtil.validateUserToken(refreshToken)){
-//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
-//            }
-//        } catch (Exception e){
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired refresh token");
-//        }
-//        // generate JWT access token and refresh token
-//
-//        String refreshToken = jwtUtil.generateUserRefreshToken(
-//                '', '');
-//        return ResponseEntity.ok(SuccessResponse.of("User logged in successfully", new UserLoginResponse(loggedUser.id(), accessToken, refreshToken)));
-//    }
+    @PostMapping(REFRESH_TOKEN)
+    @Operation(summary = "Refresh user token.",
+            responses = {
+            @ApiResponse(responseCode = "200", description = "Token refreshed."),
+            @ApiResponse(responseCode = "400", description = "Invalid input."),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials.")
+    })
+    public ResponseEntity<SuccessResponse<RefreshTokenResponse>> refresh(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        String refreshToken = refreshTokenRequest.getRefreshToken();
+        // VALIDATE REFRESH TOKEN
+        try {
+            if (!jwtUtil.validateUserRefreshToken(refreshToken)) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Invalid or expired refresh token"
+                );
+            }
+        } catch (Exception e){
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid or expired refresh token"
+            );
+        }
+
+        UUID userId;
+        try {
+            userId = jwtUtil.extractUserId(refreshToken);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid or expired refresh token"
+            );
+        }
+        User user = userService.getUser(userId);
+        String newAccessToken = jwtUtil.generateUserToken(user.id(), user.email());
+
+        return ResponseEntity.ok(SuccessResponse.of("Token refreshed successfully", new RefreshTokenResponse(newAccessToken)));
+    }
 
 }

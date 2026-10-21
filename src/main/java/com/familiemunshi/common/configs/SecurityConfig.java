@@ -15,14 +15,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
 import java.util.Arrays;
 import java.util.List;
+
 import static com.familiemunshi.common.utils.Constants.*;
-import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpMethod.PUT;
 
 @Configuration
 @EnableWebSecurity
@@ -47,35 +45,33 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        return http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).csrf(AbstractHttpConfigurer::disable).cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // =========== PUBLIC — infrastructure & API docs ===========
                 .authorizeHttpRequests(authorize -> authorize
                         // =========== PUBLIC — infrastructure & API docs ===========
                         .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
 
                         // =========== PUBLIC — authentication ===========
-                        .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll()
-                        .requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll()
-                        .requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/login")
+                        .permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/signup")
+                        .permitAll().requestMatchers(POST, API_BASE + AUTH + "/refresh-token")
+                        .permitAll()
 
+                        // User management endpoints
+                        .requestMatchers(GET, API_BASE + USERS, API_BASE + USERS + "/**")
+                        .hasAnyAuthority(Scopes.ADMIN, Scopes.SUPER_ADMIN)
+                        .requestMatchers(GET, API_BASE + USERS + "/me")
+                        .authenticated()
+
+                        .requestMatchers(POST, API_BASE + USERS, API_BASE + USERS + "/**")
+                        .hasAnyAuthority(Scopes.ADMIN, Scopes.SUPER_ADMIN)
                         // =========== PUBLIC — read-only branch browsing ===========
-                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
-                        .requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll()
-                        .requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                )
-                .exceptionHandling(ex -> ex
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                        })
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        })
-                )
-                .build();
+                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll().requestMatchers("/error").permitAll()).exceptionHandling(ex -> ex.accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                }).authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                })).build();
     }
 
     public static class Scopes {

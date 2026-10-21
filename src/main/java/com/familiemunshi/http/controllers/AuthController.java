@@ -50,7 +50,6 @@ public class AuthController {
     @PostMapping(LOGIN)
     @Operation(summary = "Login user.", responses = {@ApiResponse(responseCode = "200", description = "User logged in."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Invalid credentials.")})
     public ResponseEntity<SuccessResponse<UserLoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-        System.out.println("Login request: " + loginRequest.toEntity());
         User loggedUser = authService.login(loginRequest.toEntity());
         // generate JWT access token and refresh token
         String accessToken = jwtUtil.generateUserToken(

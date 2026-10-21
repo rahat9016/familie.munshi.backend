@@ -58,12 +58,6 @@ public class AuthService {
 
         return userService.getUser(verifiedUser.getId());
     }
-
-    // REFRESH TOKEN
-    public void refreshToken() {
-        // Implementation for refresh token
-    }
-
     // LOGOUT
     public void logout() {
         // Implementation for logout

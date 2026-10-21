@@ -15,6 +15,11 @@ public class Constants {
     public static final String SIGNUP = "/signup";
     public static final String REFRESH_TOKEN = "/refresh-token";
 
+    // USERS
+    public static final String USERS = "/users";
+
+    public static final String ID = "/{id}";
+
     // BRANCHES
     public static final String BRANCHES = "/branches";
 

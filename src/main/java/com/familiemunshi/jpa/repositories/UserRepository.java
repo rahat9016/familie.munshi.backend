@@ -14,4 +14,5 @@ public interface UserRepository extends JpaRepository<UserDao, UUID> {
             String password
     );
     Optional<UserDao> findByIdAndIsActiveTrue(UUID id);
+    boolean existsByIdAndIsActiveTrue(UUID id);
 }

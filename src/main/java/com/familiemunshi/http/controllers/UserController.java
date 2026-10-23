@@ -24,6 +24,12 @@ public class UserController {
     private UserService userService;
 
     @GetMapping(ID)
+    @Operation(summary = "Get user by ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User retrieved successfully."),
+                    @ApiResponse(responseCode = "400", description = "Invalid input."),
+                    @ApiResponse(responseCode = "401", description = "Invalid credentials.")
+            })
     public ResponseEntity<SuccessResponse<UserResponse>> getUserById(@PathVariable UUID id) {
         User user = userService.getUser(id);
         return ResponseEntity.ok(SuccessResponse.of("User retrieved successfully", new UserResponse(user)));

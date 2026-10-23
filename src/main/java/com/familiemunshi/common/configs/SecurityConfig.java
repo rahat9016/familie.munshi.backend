@@ -1,6 +1,9 @@
 package com.familiemunshi.common.configs;
 
 
+import com.familiemunshi.common.component.FilterApiRequest;
+import com.familiemunshi.common.exceptions.ErrorUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,9 +29,12 @@ import static org.springframework.http.HttpMethod.POST;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:3000, https://familiemunshi.com}")
     private String[] allowedOrigins;
+
+    private final ErrorUtils errorUtils;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -44,12 +51,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, FilterApiRequest filterApiRequest) throws Exception {
         return http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).csrf(AbstractHttpConfigurer::disable).cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // =========== PUBLIC — infrastructure & API docs ===========
                 .authorizeHttpRequests(authorize -> authorize
                         // =========== PUBLIC — infrastructure & API docs ===========
-                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
+                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**")
+                        .permitAll()
 
                         // =========== PUBLIC — authentication ===========
                         .requestMatchers(POST, API_BASE + AUTH + "/login")
@@ -59,24 +67,38 @@ public class SecurityConfig {
                         .permitAll()
 
                         // User management endpoints
-                        .requestMatchers(GET, API_BASE + USERS, API_BASE + USERS + "/**")
-                        .hasAnyAuthority(Scopes.ADMIN, Scopes.SUPER_ADMIN)
                         .requestMatchers(GET, API_BASE + USERS + "/me")
                         .authenticated()
+                        .requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**")
+                        .denyAll()
 
-                        .requestMatchers(POST, API_BASE + USERS, API_BASE + USERS + "/**")
-                        .hasAnyAuthority(Scopes.ADMIN, Scopes.SUPER_ADMIN)
                         // =========== PUBLIC — read-only branch browsing ===========
-                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll().requestMatchers("/error").permitAll()).exceptionHandling(ex -> ex.accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(HttpStatus.FORBIDDEN.value());
-                }).authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                })).build();
-    }
-
-    public static class Scopes {
-        public static final String SUPER_ADMIN = "SUPER_ADMIN";
-        public static final String ADMIN = "ADMIN";
-        public static final String USER = "USER";
+                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
+                        .requestMatchers(GET, API_BASE + BRANCHES + "/**")
+                        .permitAll()
+                        .requestMatchers(POST, API_BASE + BRANCHES + "/**")
+                        .permitAll()
+                        .requestMatchers("/error")
+                        .permitAll())
+                .addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, exception) ->
+                                errorUtils.writeErrorResponse(
+                                        response,
+                                        HttpStatus.UNAUTHORIZED.value(),
+                                        "UNAUTHORIZED",
+                                        "Authentication required or invalid token"
+                                )
+                        )
+                        .accessDeniedHandler((request, response, exception) ->
+                                errorUtils.writeErrorResponse(
+                                        response,
+                                        HttpStatus.FORBIDDEN.value(),
+                                        "FORBIDDEN",
+                                        "You do not have permission"
+                                )
+                        )
+                )
+                .build();
     }
 }

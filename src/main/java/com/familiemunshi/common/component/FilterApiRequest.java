@@ -78,6 +78,5 @@ public class FilterApiRequest extends OncePerRequestFilter {
                 .setAuthentication(authentication);
 
         chain.doFilter(request, response);
-
     }
 }

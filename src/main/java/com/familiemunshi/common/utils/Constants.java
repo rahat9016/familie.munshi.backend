@@ -18,6 +18,9 @@ public class Constants {
     // USERS
     public static final String USERS = "/users";
 
+    // ROLES
+    public static final String ROLES = "/roles";
+
     public static final String ID = "/{id}";
 
     // BRANCHES

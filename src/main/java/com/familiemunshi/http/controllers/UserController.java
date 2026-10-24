@@ -54,7 +54,7 @@ public class UserController {
                     @ApiResponse(responseCode = "400", description = "Invalid input."),
                     @ApiResponse(responseCode = "401", description = "Invalid credentials.")
             })
-    @GetMapping("/")
+    @GetMapping("")
     public String getAllUsers() {
         return "List of all users.";
     }

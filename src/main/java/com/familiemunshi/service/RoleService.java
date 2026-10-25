@@ -7,8 +7,11 @@ import com.familiemunshi.mapper.RoleMapper;
 import com.familiemunshi.service.entities.Role;
 import com.familiemunshi.service.enums.RoleScope;
 import com.familiemunshi.service.exceptions.RoleAlreadyExistsException;
+import com.familiemunshi.service.exceptions.RoleNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -32,4 +35,11 @@ public class RoleService {
 
         return RoleMapper.toEntity(savedRole);
     }
+
+    public Role getRoleById(UUID roleId) {
+        return roleRepository.findById(roleId)
+                .map(RoleMapper::toEntity)
+                .orElseThrow(() -> new RoleNotFoundException(roleId));
+    }
+
 }

@@ -9,11 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.familiemunshi.common.utils.Constants.*;
 
@@ -27,8 +25,15 @@ public class SystemRoleController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<SuccessResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
         Role role = request.toEntity();
-        return ResponseEntity.
-                ok(SuccessResponse.
-                        of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(SuccessResponse.of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
     }
+
+    @GetMapping(ID)
+    public ResponseEntity<SuccessResponse<RoleResponse>> getRoleById(@PathVariable("id") String roleId) {
+        Role role = roleService.getRoleById(java.util.UUID.fromString(roleId));
+        return ResponseEntity.ok(SuccessResponse.of("Role retrieved successfully", new RoleResponse(role)));
+    }
+
 }

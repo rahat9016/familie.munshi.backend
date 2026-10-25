@@ -67,7 +67,7 @@ public class RoleDao {
                     columnNames = {"role_id", "permission_id"}
             )
     )
-    private Set<PermissionsDao> permissions = new HashSet<>();
+    private Set<PermissionDao> permissions = new HashSet<>();
 
 
     @PrePersist

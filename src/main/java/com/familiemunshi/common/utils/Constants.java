@@ -25,8 +25,12 @@ public class Constants {
 
     public static final String ID = "/{id}";
 
+    // PERMISSIONS
+    public static final String PERMISSIONS = "/permissions";
+
     // BRANCHES
     public static final String BRANCHES = "/branches";
+
 
     // Swagger & Actuator
     public static final String SWAGGER_UI = "/swagger-ui/**";

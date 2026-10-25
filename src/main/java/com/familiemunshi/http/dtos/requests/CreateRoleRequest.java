@@ -1,5 +1,6 @@
 package com.familiemunshi.http.dtos.requests;
 
+import com.familiemunshi.service.entities.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -7,7 +8,6 @@ import lombok.*;
 @Setter
 @Getter
 public class CreateRoleRequest {
-
     @NotBlank(message = "Role name is required")
     @Size(
             min = 2,
@@ -21,4 +21,11 @@ public class CreateRoleRequest {
             message = "Description cannot exceed 1000 characters"
     )
     private String description;
+
+    public Role toEntity() {
+        return Role.builder()
+                .name(this.name.trim())
+                .description(this.description != null ? this.description.trim() : null)
+                .build();
+    }
 }

@@ -18,6 +18,8 @@ public class Constants {
     // USERS
     public static final String USERS = "/users";
 
+    // SYSTEM ROLES
+    public static final String SYSTEM = "/system";
     // ROLES
     public static final String ROLES = "/roles";
 

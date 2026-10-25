@@ -72,6 +72,10 @@ public class SecurityConfig {
                         .requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**")
                         .denyAll()
 
+                        // =========== PUBLIC — role management ===========
+                        .requestMatchers(POST, API_BASE + SYSTEM + ROLES)
+                        .permitAll()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
                         .requestMatchers(GET, API_BASE + BRANCHES + "/**")

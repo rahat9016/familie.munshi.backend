@@ -11,9 +11,9 @@ public class PermissionRequest {
     @Size(min = 1, max = 255, message = "Permission name must not exceed 255 characters")
     private String name;
 
-    public Permission toEntity() {
-        return Permission.builder()
-                .name(this.name)
-                .build();
-    }
+//    public Permission toEntity() {
+//        return Permission.builder()
+//                .name(this.name)
+//                .build();
+//    }
 }

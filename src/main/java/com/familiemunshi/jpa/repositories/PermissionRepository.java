@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface PermissionRepository extends JpaRepository <PermissionDao, UUID> {
     Optional<PermissionDao> findByName(String name);
+    boolean existsByName(String name);
 }

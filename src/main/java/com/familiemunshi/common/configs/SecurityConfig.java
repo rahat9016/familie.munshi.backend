@@ -78,6 +78,14 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE + SYSTEM + ROLES + "/**")
                         .permitAll()
 
+                        // =========== PUBLIC — permission management ===========
+                        .requestMatchers(GET, API_BASE + PERMISSIONS)
+                        .permitAll()
+                        .requestMatchers(GET, API_BASE + PERMISSIONS + "/**")
+                        .permitAll()
+                        .requestMatchers(GET, API_BASE + PERMISSIONS + "/tree")
+                        .permitAll()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
                         .requestMatchers(GET, API_BASE + BRANCHES + "/**")

@@ -23,6 +23,9 @@ public class PermissionDao {
     @Column(unique=true, nullable=false, length=255)
     private String name;
 
+    @Column(length=1000)
+    private String description;
+
     private Instant createdAt;
 
     private Instant updatedAt;

@@ -73,18 +73,17 @@ public class SecurityConfig {
                         .denyAll()
 
                         // =========== PUBLIC — role management ===========
-                        .requestMatchers(POST, API_BASE + SYSTEM + ROLES)
-                        .permitAll()
-                        .requestMatchers(GET, API_BASE + SYSTEM + ROLES + "/**")
-                        .permitAll()
+                        .requestMatchers(
+                                API_BASE + SYSTEM + ROLES,
+                                API_BASE + SYSTEM + ROLES + "/**"
+                        ).denyAll()
 
                         // =========== PUBLIC — permission management ===========
-                        .requestMatchers(GET, API_BASE + PERMISSIONS)
-                        .permitAll()
-                        .requestMatchers(GET, API_BASE + PERMISSIONS + "/**")
-                        .permitAll()
-                        .requestMatchers(GET, API_BASE + PERMISSIONS + "/tree")
-                        .permitAll()
+                        .requestMatchers(
+                                GET,
+                                API_BASE + SYSTEM + PERMISSIONS,
+                                API_BASE + SYSTEM + PERMISSIONS + "/**"
+                        ).authenticated()
 
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES).permitAll()

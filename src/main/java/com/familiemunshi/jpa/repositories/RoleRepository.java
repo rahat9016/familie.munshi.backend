@@ -10,4 +10,9 @@ import java.util.UUID;
 public interface RoleRepository extends JpaRepository <RoleDao, UUID > {
     Optional <RoleDao> findByName(String name);
     boolean existsByNameIgnoreCaseAndScope(String name, RoleScope scope);
+
+    Optional<RoleDao> findByNameIgnoreCaseAndScope(
+            String name,
+            RoleScope scope
+    );
 }

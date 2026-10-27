@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformRoleDao, UUID> {
-    boolean existsByUser_IdAndRole_id(UUID userId, UUID roleId);
+    boolean existsByUser_IdAndRole_Id(UUID userId, UUID roleId);
 
     List<UserPlatformRoleDao> findByUser_Id(UUID userId);
 

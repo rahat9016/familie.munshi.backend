@@ -8,7 +8,10 @@ import com.familiemunshi.service.entities.Role;
 import com.familiemunshi.service.enums.RoleScope;
 import com.familiemunshi.service.exceptions.RoleAlreadyExistsException;
 import com.familiemunshi.service.exceptions.RoleNotFoundException;
+import com.familiemunshi.service.filters.FindAllRolesFilter;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -40,6 +43,32 @@ public class RoleService {
         return roleRepository.findById(roleId)
                 .map(RoleMapper::toEntity)
                 .orElseThrow(() -> new RoleNotFoundException(roleId));
+    }
+
+    public Page<Role> getAllRolesByFilter(
+            FindAllRolesFilter filter,
+            Pageable pageable
+    ) {
+
+        String search = filter.getSearch();
+
+        if (search != null) {
+            search = search.trim();
+
+            if (search.isEmpty()) {
+                search = null;
+            }
+        }
+
+        Page<RoleDao> roles = roleRepository.findAllByFilters(
+                RoleScope.PLATFORM,
+                search,
+                filter.getIsActive(),
+                filter.getIsSystem(),
+                pageable
+        );
+
+        return roles.map(RoleMapper::toEntity);
     }
 
 }

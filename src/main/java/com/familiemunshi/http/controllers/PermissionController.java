@@ -9,6 +9,7 @@ import com.familiemunshi.service.entities.Permission;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ import static com.familiemunshi.common.utils.Constants.*;
 public class PermissionController {
     private final PermissionService permissionService;
 
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'ROLE_CREATE')")
     @GetMapping
     public ResponseEntity<SuccessResponse<List<PermissionResponse>>> getAllPermissions(
             @RequestParam(required = false) String module

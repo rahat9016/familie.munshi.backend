@@ -70,13 +70,14 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE + USERS + "/me")
                         .authenticated()
                         .requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**")
-                        .denyAll()
+                        .authenticated()
 
                         // =========== PUBLIC — role management ===========
                         .requestMatchers(
+                                GET,
                                 API_BASE + SYSTEM + ROLES,
                                 API_BASE + SYSTEM + ROLES + "/**"
-                        ).denyAll()
+                        ).authenticated()
 
                         // =========== PUBLIC — permission management ===========
                         .requestMatchers(

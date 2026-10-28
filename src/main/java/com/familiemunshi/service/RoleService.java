@@ -1,6 +1,7 @@
 package com.familiemunshi.service;
 
 import com.familiemunshi.common.utils.RoleNameUtil;
+import com.familiemunshi.common.utils.Util;
 import com.familiemunshi.jpa.daos.RoleDao;
 import com.familiemunshi.jpa.repositories.RoleRepository;
 import com.familiemunshi.mapper.RoleMapper;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -50,21 +52,21 @@ public class RoleService {
             Pageable pageable
     ) {
 
-        String search = filter.getSearch();
+        String searchPattern = Util.toSearchPattern(filter.getSearch());
 
-        if (search != null) {
-            search = search.trim();
+        boolean filterActive = filter.getIsActive() != null;
+        boolean activeValue = Boolean.TRUE.equals(filter.getIsActive());
 
-            if (search.isEmpty()) {
-                search = null;
-            }
-        }
+        boolean filterSystem = filter.getIsSystem() != null;
+        boolean systemValue = Boolean.TRUE.equals(filter.getIsSystem());
 
         Page<RoleDao> roles = roleRepository.findAllByFilters(
                 RoleScope.PLATFORM,
-                search,
-                filter.getIsActive(),
-                filter.getIsSystem(),
+                searchPattern,
+                filterActive,
+                activeValue,
+                filterSystem,
+                systemValue,
                 pageable
         );
 

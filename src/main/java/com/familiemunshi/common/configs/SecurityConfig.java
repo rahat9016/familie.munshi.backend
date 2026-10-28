@@ -78,6 +78,9 @@ public class SecurityConfig {
                                 API_BASE + SYSTEM + ROLES,
                                 API_BASE + SYSTEM + ROLES + "/**"
                         ).authenticated()
+                        .requestMatchers(
+                                POST, API_BASE + SYSTEM + ROLES
+                        ).authenticated()
 
                         // =========== PUBLIC — permission management ===========
                         .requestMatchers(

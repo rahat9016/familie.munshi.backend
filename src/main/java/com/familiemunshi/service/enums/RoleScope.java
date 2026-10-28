@@ -43,5 +43,4 @@ public enum RoleScope {
                 .map(RoleScope::getCode)
                 .toList();
     }
-
 }

@@ -6,20 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FindAllRolesFilter {
-
-    @Schema(
-            description = "Search roles by name or description",
-            example = "admin"
-    )
-    private String search;
-
-    @Schema(
-            description = "Filter by active or inactive status",
-            example = "true"
-    )
-    private Boolean isActive;
-
+public class FindAllRolesFilter extends BaseFilter {
     @Schema(
             description = "Filter system or custom roles",
             example = "false"

@@ -39,9 +39,7 @@ public class SystemRoleController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<SuccessResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
         Role role = request.toEntity();
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(SuccessResponse.of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
+        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
     }
 
     @GetMapping(ID)
@@ -52,79 +50,34 @@ public class SystemRoleController {
 
 
     @GetMapping
-    @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'ROLE_READ')"
-    )
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'ROLE_READ')")
     @Operation(
-            summary = "Get all system roles",
-            description = "Search and filter platform roles with pagination.",
+            summary = "Get all system roles", description = "Search and filter platform roles with pagination.",
             responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Roles retrieved successfully"
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid pagination or filter values"
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Authentication required"
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "ROLE_READ permission required"
-                    )
+                    @ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid pagination or filter values"),
+                    @ApiResponse(responseCode = "401", description = "Authentication required"),
+                    @ApiResponse(responseCode = "403", description = "ROLE_READ permission required")
             }
     )
     public ResponseEntity<PaginatedResponse<RoleResponse>> getAllRoles(
+            @Valid @ParameterObject FindAllRolesFilter filter,
+            @Parameter(description = "Page number starting from 1", example = "1")
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "Number of records per page, maximum 100", example = "20")
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-            @Valid @ParameterObject
-            FindAllRolesFilter filter,
+        Pageable pageable = PageRequest
+                .of(page - 1, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
 
-            @Parameter(
-                    description = "Page number starting from 1",
-                    example = "1"
-            )
-            @RequestParam(defaultValue = "1")
-            @Min(1)
-            int page,
+        Page<Role> roles = roleService.getAllRolesByFilter(filter, pageable);
 
-            @Parameter(
-                    description = "Number of records per page, maximum 100",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20")
-            @Min(1)
-            @Max(100)
-            int size
-    ) {
-
-        Pageable pageable = PageRequest.of(
-                page - 1,
-                size,
-                Sort.by(
-                        Sort.Order.desc("createdAt"),
-                        Sort.Order.desc("id")
-                )
-        );
-
-        Page<Role> roles = roleService.getAllRolesByFilter(
-                filter,
-                pageable
-        );
-
-        List<RoleResponse> response = roles.getContent()
+        List<RoleResponse> response = roles
+                .getContent()
                 .stream()
                 .map(RoleResponse::new)
                 .toList();
 
-        return ResponseEntity.ok(
-                PaginatedResponse.of(
-                        "Roles retrieved successfully",
-                        roles,
-                        response
-                )
-        );
+        return ResponseEntity.ok(PaginatedResponse.of("Roles retrieved successfully", roles, response));
     }
 }

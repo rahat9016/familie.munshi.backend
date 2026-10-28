@@ -31,10 +31,9 @@ import static org.springframework.http.HttpMethod.POST;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final ErrorUtils errorUtils;
     @Value("${cors.allowed-origins:http://localhost:3000, https://familiemunshi.com}")
     private String[] allowedOrigins;
-
-    private final ErrorUtils errorUtils;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -56,66 +55,22 @@ public class SecurityConfig {
                 // =========== PUBLIC — infrastructure & API docs ===========
                 .authorizeHttpRequests(authorize -> authorize
                         // =========== PUBLIC — infrastructure & API docs ===========
-                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**")
-                        .permitAll()
+                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
 
                         // =========== PUBLIC — authentication ===========
-                        .requestMatchers(POST, API_BASE + AUTH + "/login")
-                        .permitAll()
-                        .requestMatchers(POST, API_BASE + AUTH + "/signup")
-                        .permitAll().requestMatchers(POST, API_BASE + AUTH + "/refresh-token")
-                        .permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll().requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll().requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
 
                         // User management endpoints
-                        .requestMatchers(GET, API_BASE + USERS + "/me")
-                        .authenticated()
-                        .requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**")
-                        .authenticated()
+                        .requestMatchers(GET, API_BASE + USERS + "/me").authenticated().requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**").authenticated()
 
                         // =========== PUBLIC — role management ===========
-                        .requestMatchers(
-                                GET,
-                                API_BASE + SYSTEM + ROLES,
-                                API_BASE + SYSTEM + ROLES + "/**"
-                        ).authenticated()
-                        .requestMatchers(
-                                POST, API_BASE + SYSTEM + ROLES
-                        ).authenticated()
+                        .requestMatchers(GET, API_BASE + SYSTEM + ROLES, API_BASE + SYSTEM + ROLES + "/**").authenticated().requestMatchers(POST, API_BASE + SYSTEM + ROLES).authenticated()
 
                         // =========== PUBLIC — permission management ===========
-                        .requestMatchers(
-                                GET,
-                                API_BASE + SYSTEM + PERMISSIONS,
-                                API_BASE + SYSTEM + PERMISSIONS + "/**"
-                        ).authenticated()
+                        // =========== PERMISSION MANAGEMENT ===========
+                        .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 
                         // =========== PUBLIC — read-only branch browsing ===========
-                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll()
-                        .requestMatchers(GET, API_BASE + BRANCHES + "/**")
-                        .permitAll()
-                        .requestMatchers(POST, API_BASE + BRANCHES + "/**")
-                        .permitAll()
-                        .requestMatchers("/error")
-                        .permitAll())
-                .addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, exception) ->
-                                errorUtils.writeErrorResponse(
-                                        response,
-                                        HttpStatus.UNAUTHORIZED.value(),
-                                        "UNAUTHORIZED",
-                                        "Authentication required or invalid token"
-                                )
-                        )
-                        .accessDeniedHandler((request, response, exception) ->
-                                errorUtils.writeErrorResponse(
-                                        response,
-                                        HttpStatus.FORBIDDEN.value(),
-                                        "FORBIDDEN",
-                                        "You do not have permission"
-                                )
-                        )
-                )
-                .build();
+                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll().requestMatchers("/error").permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
     }
 }

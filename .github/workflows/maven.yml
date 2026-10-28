@@ -92,4 +92,6 @@ jobs:
           mvn -version
 
       - name: Build and test
-        run: mvn -B clean verify
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: ./mvnw clean verify

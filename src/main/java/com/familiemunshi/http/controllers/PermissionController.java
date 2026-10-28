@@ -62,22 +62,15 @@ public class PermissionController {
     )
     public ResponseEntity<PaginatedResponse<PermissionResponse>>
     getAllPermissions(
-
             @Valid @ParameterObject
             FindAllPermissionsFilter filter,
 
-            @Parameter(
-                    description = "Page number starting from 1",
-                    example = "1"
-            )
+            @Parameter(description = "Page number starting from 1", example = "1")
             @RequestParam(defaultValue = "1")
             @Min(1)
             int page,
 
-            @Parameter(
-                    description = "Records per page (maximum 100)",
-                    example = "20"
-            )
+            @Parameter(description = "Records per page (maximum 100)", example = "20")
             @RequestParam(defaultValue = "20")
             @Min(1)
             @Max(100)
@@ -87,10 +80,7 @@ public class PermissionController {
         Pageable pageable = PageRequest.of(
                 page - 1,
                 size,
-                Sort.by(
-                        Sort.Order.asc("name"),
-                        Sort.Order.asc("id")
-                )
+                Sort.by(Sort.Order.asc("name"), Sort.Order.asc("id"))
         );
 
         Page<Permission> permissions =

@@ -71,6 +71,10 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 
                         // =========== PUBLIC — read-only branch browsing ===========
-                        .requestMatchers(GET, API_BASE + BRANCHES).permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**").permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**").permitAll().requestMatchers("/error").permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
+                        .requestMatchers(GET, API_BASE + BRANCHES)
+                        .permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**")
+                        .permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**")
+                        .permitAll().requestMatchers("/error")
+                        .permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
     }
 }

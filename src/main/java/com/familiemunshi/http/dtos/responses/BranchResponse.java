@@ -15,7 +15,7 @@ public class BranchResponse {
     private String logoUrl;
     private boolean isActive;
 
-    public BranchResponse(Branch branch) {
+    public BranchResponse(Branch branch, String logoUrl) {
         this.id = branch.id();
         this.name = branch.name();
         this.address = branch.address();

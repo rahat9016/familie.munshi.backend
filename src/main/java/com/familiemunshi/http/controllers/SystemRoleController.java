@@ -39,7 +39,10 @@ public class SystemRoleController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<SuccessResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
         Role role = request.toEntity();
-        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(SuccessResponse
+                        .of("Role created successfully", new RoleResponse(roleService.createSystemRole(role))));
     }
 
     @GetMapping(ID)

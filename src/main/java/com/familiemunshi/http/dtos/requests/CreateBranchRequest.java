@@ -1,14 +1,17 @@
 package com.familiemunshi.http.dtos.requests;
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
-import lombok.Builder;
-import com.familiemunshi.jpa.daos.BranchDao;
+
+import com.familiemunshi.http.validations.ValidationUtil;
+import com.familiemunshi.service.entities.Branch;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
+
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 @Getter
 @Setter
@@ -37,13 +40,20 @@ public class CreateBranchRequest {
     @Builder.Default
     private Boolean isActive = true;
 
-    public BranchDao toEntity() {
-        return BranchDao.builder()
+    public Branch toEntity() {
+        return Branch.builder()
                 .name(this.name)
                 .address(this.address)
                 .phone(this.phone)
                 .isActive(Boolean.TRUE.equals(this.isActive))
                 .build();
     }
+
+    private void validateProperties() {
+        if (logo != null) {
+            ValidationUtil.validateMediaType(logo);
+        }
+    }
+
 
 }

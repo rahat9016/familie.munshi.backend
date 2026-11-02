@@ -12,6 +12,7 @@ public class BranchMapper {
         if(dao == null) return null;
         return Branch.builder()
                 .id(dao.getId())
+                .code(dao.getCode())
                 .name(dao.getName())
                 .address(dao.getAddress())
                 .logoUrl(dao.getLogoUrl())
@@ -23,6 +24,7 @@ public class BranchMapper {
         if(domain == null) return null;
         return BranchDao.builder()
                 .id(domain.id())
+                .code(domain.code())
                 .name(domain.name())
                 .address(domain.address())
                 .logoUrl(domain.logoUrl())

@@ -75,6 +75,7 @@ public class MinioStorageService implements FileStorageService {
     }
 
     public String getPresignedUrl(String filename, int expiryInMinutes) {
+        System.out.println(Http.Method.GET);
         try {
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()

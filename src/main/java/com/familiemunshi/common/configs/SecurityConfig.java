@@ -23,8 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.familiemunshi.common.utils.Constants.*;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.*;
 
 @Configuration
 @EnableWebSecurity
@@ -74,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE + BRANCHES)
                         .permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**")
                         .permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**")
+                        .permitAll().requestMatchers(PATCH, API_BASE + BRANCHES + "/**")
                         .permitAll().requestMatchers("/error")
                         .permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
     }

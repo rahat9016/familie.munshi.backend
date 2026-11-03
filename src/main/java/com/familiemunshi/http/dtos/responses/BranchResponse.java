@@ -21,7 +21,7 @@ public class BranchResponse {
         this.address = branch.address();
         this.phone = branch.phone();
         this.code = branch.code();
-        this.logoUrl = branch.logoUrl();
+        this.logoUrl = logoUrl;
         this.isActive = branch.isActive();
     }
 }

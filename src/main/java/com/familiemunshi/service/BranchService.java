@@ -32,6 +32,7 @@ public class BranchService {
     private final BranchRepository branchRepository;
     private final FileStorageService fileStorageService;
 
+    // CREATE BRANCH
     public Branch createBranch(Branch branch, MultipartFile logoFile) {
         // HANDLE NAME EXIST
         if (branchRepository.existsByName(branch.name())) {
@@ -59,7 +60,7 @@ public class BranchService {
         return BranchMapper.toEntity(savedBranch);
     }
 
-
+    // GET ALL BRANCHES WITH FILTERS
     public Page<Branch> getAllBranchesByFilter(FindAllBranchesFilter filter, Pageable pageable) {
 
         // NORMALIZE SEARCH
@@ -77,7 +78,7 @@ public class BranchService {
         return branches.map(BranchMapper::toEntity);
     }
 
-
+    // UPDATE BRANCH
     public Branch updateBranch(UUID branchId, UpdateBranchRequest request) {
 
         // 1. FIND EXISTING BRANCH
@@ -157,6 +158,13 @@ public class BranchService {
 
         // 8. RETURN DOMAIN
         return BranchMapper.toEntity(savedBranch);
+    }
+
+
+    // GET BRANCH BY ID
+    public Branch getBranchById(UUID branchId) {
+        BranchDao branchDao = branchRepository.findById(branchId).orElseThrow(() -> new BranchNotFoundException(branchId));
+        return BranchMapper.toEntity(branchDao);
     }
 
 

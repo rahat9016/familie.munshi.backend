@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -68,9 +69,7 @@ public class BranchController {
 
 
     @GetMapping
-//    @PreAuthorize(
-//            "@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_READ')"
-//    )
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_READ')")
     @Operation(
             summary = "Get all branches",
             description = "Search and filter branches with pagination.",
@@ -125,9 +124,7 @@ public class BranchController {
 
 
     @PatchMapping(value = ID, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PreAuthorize(
-//            "@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_UPDATE')"
-//    )
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_UPDATE')")
     @Operation(
             summary = "Update branch",
             description = "Partially update branch and replace its logo."
@@ -136,9 +133,7 @@ public class BranchController {
             @PathVariable("id") UUID branchId,
             @Valid @ModelAttribute UpdateBranchRequest request
     ) {
-
         Branch updatedBranch = branchService.updateBranch(branchId, request);
-
         String logoUrl = branchService.getBranchLogoUrl(updatedBranch);
 
         return ResponseEntity.ok(
@@ -147,6 +142,24 @@ public class BranchController {
                         new BranchResponse(updatedBranch, logoUrl)
                 )
         );
+    }
+
+
+    @GetMapping(ID)
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_READ')")
+    @Operation(
+            summary = "Get branch by ID", description = "Retrieve branch details with MinIO presigned logo URL.",
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Branch retrieved successfully"),
+                @ApiResponse(responseCode = "401", description = "Unauthenticated"),
+                @ApiResponse(responseCode = "403", description = "Permission denied"),
+                @ApiResponse(responseCode = "404", description = "Branch not found")
+            }
+    )
+    public ResponseEntity<SuccessResponse<BranchResponse>> getBranchById(@PathVariable("id") UUID branchId) {
+        Branch branch = branchService.getBranchById(branchId);
+        String logoUrl = branchService.getBranchLogoUrl(branch);
+        return ResponseEntity.ok(SuccessResponse.of("Branch retrieved successfully", new BranchResponse(branch, logoUrl)));
     }
 
 }

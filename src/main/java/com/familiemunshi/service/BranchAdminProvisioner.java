@@ -5,8 +5,8 @@ package com.familiemunshi.service;
 import com.familiemunshi.common.policy.PermissionPolicy;
 import com.familiemunshi.common.utils.BranchAdminGenerator;
 import com.familiemunshi.common.utils.Util;
-import com.familiemunshi.common.utils.UuidV7Generator;
 
+import com.familiemunshi.http.validations.ValidationUtil;
 import com.familiemunshi.jpa.daos.BranchDao;
 import com.familiemunshi.jpa.daos.PermissionDao;
 import com.familiemunshi.jpa.daos.RoleDao;
@@ -20,7 +20,11 @@ import com.familiemunshi.jpa.repositories.UserRepository;
 import com.familiemunshi.jpa.repositories.UserBranchRepository;
 import com.familiemunshi.jpa.repositories.UserBranchRoleRepository;
 
+import com.familiemunshi.mapper.RoleMapper;
+import com.familiemunshi.mapper.UserMapper;
 import com.familiemunshi.service.entities.BranchAdminCredentials;
+import com.familiemunshi.service.entities.Role;
+import com.familiemunshi.service.entities.User;
 import com.familiemunshi.service.enums.RoleScope;
 import com.familiemunshi.service.exceptions.UserEmailAlreadyExistsException;
 
@@ -29,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -38,7 +43,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class BranchAdminProvisioner {
 
@@ -57,6 +61,7 @@ public class BranchAdminProvisioner {
     @Value("${branch-admin.common-password}")
     private String commonPassword;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public BranchAdminCredentials provision(BranchDao branch) {
 
         // ======================================
@@ -99,15 +104,9 @@ public class BranchAdminProvisioner {
         // 3. VALIDATE COMMON PASSWORD
         // ======================================
 
-        if (commonPassword == null
-                || commonPassword.length() < 16
-                || commonPassword.isBlank()) {
-
-            throw new IllegalStateException(
-                    "Branch Admin common password must "
-                            + "contain at least 16 characters"
-            );
-        }
+        ValidationUtil.validateBranchAdminPassword(
+                commonPassword
+        );
 
         // ======================================
         // 4. HASH COMMON PASSWORD
@@ -120,8 +119,6 @@ public class BranchAdminProvisioner {
                 salt
         );
 
-        // Never log or return commonPassword.
-
         // ======================================
         // 5. CREATE FIRST ADMIN USER
         // ======================================
@@ -132,42 +129,44 @@ public class BranchAdminProvisioner {
             firstName = firstName.substring(0, 120);
         }
 
-        UserDao admin = UserDao.builder()
-                .id(UuidV7Generator.generate())
+        User adminUser = User.builder()
                 .firstName(firstName)
                 .lastName("Admin")
                 .email(email)
-                .phone(branch.getPhone())
                 .password(hashedPassword)
-                .salt(salt)
                 .isActive(false)
                 .build();
 
-        UserDao savedAdmin =
-                userRepository.saveAndFlush(admin);
+        UserDao adminDao = UserMapper.toDao(
+                adminUser,
+                salt
+        );
+
+        UserDao savedAdmin = userRepository.saveAndFlush(adminDao);
 
         // ======================================
         // 6. CREATE BRANCH_ADMIN ROLE
         // ======================================
 
-        RoleDao role = RoleDao.builder()
-                .id(UuidV7Generator.generate())
+        Role adminRole = Role.builder()
                 .name(BRANCH_ADMIN_ROLE)
                 .description(
                         "Administrator of Branch "
                                 + branch.getCode()
                 )
                 .scope(RoleScope.BRANCH)
-                .branch(branch)
                 .isSystem(true)
                 .isActive(true)
-
-                // ONLY BRANCH PERMISSIONS
-                .permissions(new HashSet<>(permissions))
                 .build();
 
+        RoleDao roleDao = RoleMapper.toDao(
+                adminRole,
+                branch,
+                new HashSet<>(permissions)
+        );
+
         RoleDao savedRole =
-                roleRepository.saveAndFlush(role);
+                roleRepository.saveAndFlush(roleDao);
 
         // ======================================
         // 7. CREATE USER-BRANCH MEMBERSHIP
@@ -175,7 +174,6 @@ public class BranchAdminProvisioner {
 
         UserBranchDao membership =
                 UserBranchDao.builder()
-                        .id(UuidV7Generator.generate())
                         .user(savedAdmin)
                         .branch(branch)
                         .build();
@@ -188,7 +186,6 @@ public class BranchAdminProvisioner {
 
         UserBranchRoleDao assignment =
                 UserBranchRoleDao.builder()
-                        .id(UuidV7Generator.generate())
                         .user(savedAdmin)
                         .branch(branch)
                         .role(savedRole)

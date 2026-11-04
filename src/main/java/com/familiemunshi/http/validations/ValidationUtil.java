@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class ValidationUtil {
-
+    private static final int MIN_BRANCH_ADMIN_PASSWORD_LENGTH = 8;
     private static final long DEFAULT_MAX_IMAGE_SIZE_MB = 2;
 
     private static final Set<String> ALLOWED_EXTENSIONS =
@@ -195,4 +195,23 @@ public final class ValidationUtil {
 
         return true;
     }
+
+    public static void validateBranchAdminPassword(
+            String commonPassword
+    ) {
+
+        if (commonPassword == null
+                || commonPassword.isBlank()
+                || commonPassword.length()
+                < MIN_BRANCH_ADMIN_PASSWORD_LENGTH) {
+
+            throw new IllegalStateException(
+                    "Branch Admin common password must "
+                            + "contain at least "
+                            + MIN_BRANCH_ADMIN_PASSWORD_LENGTH
+                            + " characters"
+            );
+        }
+    }
+
 }

@@ -57,7 +57,10 @@ public class SecurityConfig {
                         .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
 
                         // =========== PUBLIC — authentication ===========
-                        .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll().requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll().requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + "/activate-branch-admin").permitAll()
 
                         // User management endpoints
                         .requestMatchers(GET, API_BASE + USERS + "/me").authenticated().requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**").authenticated()

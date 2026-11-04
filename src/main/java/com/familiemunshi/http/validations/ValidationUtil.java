@@ -1,6 +1,7 @@
 package com.familiemunshi.http.validations;
 
 import com.familiemunshi.common.exceptions.BadRequestException;
+import com.familiemunshi.common.utils.Util;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -210,6 +211,35 @@ public final class ValidationUtil {
                             + "contain at least "
                             + MIN_BRANCH_ADMIN_PASSWORD_LENGTH
                             + " characters"
+            );
+        }
+    }
+
+
+    public static void validateNewBranchAdminPassword(
+            String newPassword,
+            String currentPasswordHash
+    ) {
+
+        if (newPassword == null
+                || newPassword.isBlank()
+                || newPassword.length() < 8
+                || newPassword.length() > 72
+                || newPassword.getBytes(
+                StandardCharsets.UTF_8
+        ).length > 72) {
+
+            throw new BadRequestException(
+                    "invalidNewBranchAdminPassword"
+            );
+        }
+
+        if (Util.verifyPassword(
+                newPassword,
+                currentPasswordHash
+        )) {
+            throw new BadRequestException(
+                    "newPasswordMustBeDifferent"
             );
         }
     }

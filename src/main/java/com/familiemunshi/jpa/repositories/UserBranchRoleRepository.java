@@ -69,4 +69,24 @@ public interface UserBranchRoleRepository
             @Param("branchId") UUID branchId,
             @Param("scope") RoleScope scope
     );
+
+
+    @Query("""
+    SELECT COUNT(ubr) > 0
+    FROM UserBranchRoleDao ubr
+    JOIN ubr.role role
+    WHERE ubr.user.id = :userId
+      AND ubr.user.isActive = false
+      AND ubr.branch.isActive = true
+      AND role.name = :roleName
+      AND role.scope = :scope
+      AND role.isActive = true
+      AND role.branch.id = ubr.branch.id
+""")
+    boolean hasPendingBranchAdminAssignment(
+            @Param("userId") UUID userId,
+            @Param("roleName") String roleName,
+            @Param("scope") RoleScope scope
+    );
+
 }

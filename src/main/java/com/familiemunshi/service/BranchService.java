@@ -8,6 +8,7 @@ import com.familiemunshi.jpa.daos.BranchDao;
 import com.familiemunshi.jpa.repositories.BranchRepository;
 import com.familiemunshi.mapper.BranchMapper;
 import com.familiemunshi.service.entities.Branch;
+import com.familiemunshi.service.entities.CreatedBranchResult;
 import com.familiemunshi.service.exceptions.BranchNameAlreadyExistsException;
 import com.familiemunshi.service.exceptions.BranchNotFoundException;
 import com.familiemunshi.service.filters.FindAllBranchesFilter;
@@ -31,34 +32,56 @@ public class BranchService {
     private static final int LOGO_URL_EXPIRY_MINUTES = 7 * 24 * 60;
     private final BranchRepository branchRepository;
     private final FileStorageService fileStorageService;
+    private final BranchAdminProvisioner branchAdminProvisioner;
 
     // CREATE BRANCH
-    public Branch createBranch(Branch branch, MultipartFile logoFile) {
-        // HANDLE NAME EXIST
+    public CreatedBranchResult createBranch(
+            Branch branch,
+            MultipartFile logoFile
+    ) {
+
         if (branchRepository.existsByName(branch.name())) {
-            throw new BranchNameAlreadyExistsException(branch.name());
+            throw new BranchNameAlreadyExistsException(
+                    branch.name()
+            );
         }
 
-        // GENERATE UNIQUE CODE
-        String uniqueCode = generateUniqueBranchCode();
-        branch = branch.withCode(uniqueCode);
+        String branchCode = generateUniqueBranchCode();
 
-        // HANDLE FILE UPLOAD
+        branch = branch
+                .withCode(branchCode);
+
+        // OPTIONAL LOGO
         if (logoFile != null && !logoFile.isEmpty()) {
+
             ValidationUtil.validateMediaType(logoFile);
-            final String filename = fileStorageService.uploadFile(logoFile);
+            requireActiveTransaction();
+
+            String filename =
+                    fileStorageService.uploadFile(logoFile);
+
+            registerUploadedFileCleanup(filename);
+
             branch = branch.withLogoUrl(filename);
         }
 
-        // MAP TO DAO
+        // SAVE BRANCH
         BranchDao branchDao = BranchMapper.toDao(branch);
 
-        // SAVE BRANCH
-        BranchDao savedBranch = branchRepository.save(branchDao);
+        BranchDao savedBranch =
+                branchRepository.saveAndFlush(branchDao);
 
-        // MAP BACK TO ENTITY
-        return BranchMapper.toEntity(savedBranch);
+        // CREATE ADMIN + ROLE + ASSIGNMENTS
+        var admin = branchAdminProvisioner.provision(
+                savedBranch
+        );
+
+        return new CreatedBranchResult(
+                BranchMapper.toEntity(savedBranch),
+                admin
+        );
     }
+
 
     // GET ALL BRANCHES WITH FILTERS
     public Page<Branch> getAllBranchesByFilter(FindAllBranchesFilter filter, Pageable pageable) {
@@ -193,4 +216,48 @@ public class BranchService {
         );
     }
 
+    private void requireActiveTransaction() {
+
+        if (!TransactionSynchronizationManager
+                .isActualTransactionActive()
+                || !TransactionSynchronizationManager
+                .isSynchronizationActive()) {
+
+            throw new IllegalStateException(
+                    "Active transaction required"
+            );
+        }
+    }
+
+
+    private void registerUploadedFileCleanup(
+            String filename
+    ) {
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+
+                    @Override
+                    public void afterCompletion(int status) {
+
+                        if (status != STATUS_COMMITTED) {
+                            safeDeleteFile(filename);
+                        }
+                    }
+                }
+        );
+    }
+    private void safeDeleteFile(String filename) {
+
+        try {
+            fileStorageService.deleteFile(filename);
+        } catch (Exception exception) {
+
+            log.error(
+                    "Failed to delete Branch logo: {}",
+                    filename,
+                    exception
+            );
+        }
+    }
 }

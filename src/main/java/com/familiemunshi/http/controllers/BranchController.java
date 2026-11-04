@@ -4,10 +4,12 @@ package com.familiemunshi.http.controllers;
 import com.familiemunshi.http.dtos.requests.CreateBranchRequest;
 import com.familiemunshi.http.dtos.requests.UpdateBranchRequest;
 import com.familiemunshi.http.dtos.responses.BranchResponse;
+import com.familiemunshi.http.dtos.responses.CreatedBranchResponse;
 import com.familiemunshi.http.dtos.responses.PaginatedResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
 import com.familiemunshi.service.BranchService;
 import com.familiemunshi.service.entities.Branch;
+import com.familiemunshi.service.entities.CreatedBranchResult;
 import com.familiemunshi.service.filters.FindAllBranchesFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,23 +51,45 @@ public class BranchController {
                     @ApiResponse(responseCode = "401", description = "Unauthenticated.")
             }
     )
-    public ResponseEntity<SuccessResponse<BranchResponse>> createBranch(@Valid @ModelAttribute CreateBranchRequest branchRequest) {
-        Branch branch = branchRequest.toEntity();
-        Branch createdBranch = branchService.createBranch(branch, branchRequest.getLogo());
+    public ResponseEntity<SuccessResponse<CreatedBranchResponse>>
+    createBranch(
+            @Valid @ModelAttribute
+            CreateBranchRequest branchRequest
+    ) {
 
-        String logoUrl = branchService.getBranchLogoUrl(
-                createdBranch
+        // 1. CONVERT REQUEST TO ENTITY
+        Branch branch = branchRequest.toEntity();
+
+        // 2. CREATE BRANCH + ADMIN + ROLE + PERMISSIONS
+        CreatedBranchResult createdResult =
+                branchService.createBranch(
+                        branch,
+                        branchRequest.getLogo()
+                );
+
+        // 3. GENERATE PRESIGNED LOGO URL
+        String logoUrl = getLogoUrlOrNull(
+                createdResult.branch()
         );
 
+        // 4. PREPARE RESPONSE
+        CreatedBranchResponse response =
+                new CreatedBranchResponse(
+                        createdResult,
+                        logoUrl
+                );
+
+        // 5. RETURN CREATED
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
                         SuccessResponse.of(
-                                "Branch created successfully",
-                                new BranchResponse(createdBranch, logoUrl)
+                                "Branch and Admin created successfully",
+                                response
                         )
                 );
     }
+
 
 
     @GetMapping
@@ -160,6 +184,20 @@ public class BranchController {
         Branch branch = branchService.getBranchById(branchId);
         String logoUrl = branchService.getBranchLogoUrl(branch);
         return ResponseEntity.ok(SuccessResponse.of("Branch retrieved successfully", new BranchResponse(branch, logoUrl)));
+    }
+
+    private String getLogoUrlOrNull(Branch branch) {
+
+        if (branch.logoUrl() == null
+                || branch.logoUrl().isBlank()) {
+            return null;
+        }
+
+        try {
+            return branchService.getBranchLogoUrl(branch);
+        } catch (Exception exception) {
+            return null;
+        }
     }
 
 }

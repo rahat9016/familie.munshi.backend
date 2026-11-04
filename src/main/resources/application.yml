@@ -19,6 +19,9 @@ bootstrap:
     last-name: ${SUPER_ADMIN_LAST_NAME:}
     email: ${SUPER_ADMIN_EMAIL:}
     password: ${SUPER_ADMIN_PASSWORD:}
+branch-admin:
+  email-domain: ${BRANCH_ADMIN_EMAIL_DOMAIN}
+  common-password: ${BRANCH_ADMIN_COMMON_PASSWORD}
 
 storage:
   type: ${STORAGE_TYPE:minio}

@@ -48,8 +48,20 @@ public enum PermissionCode {
     PRODUCT_CREATE("PRODUCT_CREATE", "PRODUCT", "Create products"),
     PRODUCT_READ("PRODUCT_READ", "PRODUCT", "View products"),
     PRODUCT_UPDATE("PRODUCT_UPDATE", "PRODUCT", "Update products"),
-    PRODUCT_DELETE("PRODUCT_DELETE", "PRODUCT", "Delete products");
+    PRODUCT_DELETE("PRODUCT_DELETE", "PRODUCT", "Delete products"),
 
+    // SALES MANAGEMENT
+    SALE_CREATE("SALE_CREATE", "SALE", "Create sales"),
+    SALE_READ("SALE_READ", "SALE", "View sales"),
+    SALE_UPDATE("SALE_UPDATE", "SALE", "Update sales"),
+    SALE_DELETE("SALE_DELETE", "SALE", "Delete sales"),
+    SALE_REFUND("SALE_REFUND", "SALE", "Refund sales"),
+
+    // ORDER MANAGEMENT
+    ORDER_CREATE("ORDER_CREATE", "ORDER", "Create orders"),
+    ORDER_READ("ORDER_READ", "ORDER", "View orders"),
+    ORDER_UPDATE("ORDER_UPDATE", "ORDER", "Update orders"),
+    ORDER_CANCEL("ORDER_CANCEL", "ORDER", "Cancel orders");
 
     private final String code;
     private final String module;
@@ -104,5 +116,70 @@ public enum PermissionCode {
                 .anyMatch(permission ->
                         permission.getCode()
                                 .equalsIgnoreCase(code));
+    }
+
+
+
+
+    public static List<String> getDefaultBranchPermissions() {
+
+        return List.of(
+                // BRANCH MANAGEMENT
+                BRANCH_READ.getCode(),
+                BRANCH_UPDATE.getCode(),
+
+                // USER MANAGEMENT
+                USER_CREATE.getCode(),
+                USER_READ.getCode(),
+                USER_UPDATE.getCode(),
+                USER_ROLE_MANAGE.getCode(),
+
+                // ROLE MANAGEMENT
+                ROLE_CREATE.getCode(),
+                ROLE_READ.getCode(),
+                ROLE_UPDATE.getCode(),
+                ROLE_PERMISSION_MANAGE.getCode(),
+                PERMISSION_READ.getCode(),
+
+                // PRODUCT MANAGEMENT
+                PRODUCT_CREATE.getCode(),
+                PRODUCT_READ.getCode(),
+                PRODUCT_UPDATE.getCode(),
+                PRODUCT_DELETE.getCode(),
+
+                // SALES MANAGEMENT
+                SALE_CREATE.getCode(),
+                SALE_READ.getCode(),
+                SALE_UPDATE.getCode(),
+
+                // ORDER MANAGEMENT
+                ORDER_CREATE.getCode(),
+                ORDER_READ.getCode(),
+                ORDER_UPDATE.getCode(),
+                ORDER_CANCEL.getCode()
+        );
+    }
+
+    public static List<String> getPlatformPermissions() {
+        return List.of(
+                BRANCH_CREATE.getCode(),
+                BRANCH_READ.getCode(),
+                BRANCH_UPDATE.getCode(),
+                BRANCH_DELETE.getCode(),
+
+                ROLE_CREATE.getCode(),
+                ROLE_READ.getCode(),
+                ROLE_UPDATE.getCode(),
+                ROLE_DELETE.getCode(),
+
+                PERMISSION_READ.getCode(),
+                ROLE_PERMISSION_MANAGE.getCode(),
+
+                USER_CREATE.getCode(),
+                USER_READ.getCode(),
+                USER_UPDATE.getCode(),
+                USER_DELETE.getCode(),
+                USER_ROLE_MANAGE.getCode()
+        );
     }
 }

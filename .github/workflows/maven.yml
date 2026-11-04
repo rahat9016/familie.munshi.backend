@@ -94,4 +94,6 @@ jobs:
       - name: Build and test
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          BRANCH_ADMIN_EMAIL_DOMAIN: ${{ secrets.BRANCH_ADMIN_EMAIL_DOMAIN }}
+          BRANCH_ADMIN_COMMON_PASSWORD: ${{ secrets.BRANCH_ADMIN_COMMON_PASSWORD }}
         run: ./mvnw clean verify

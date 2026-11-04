@@ -51,10 +51,10 @@ public class BranchAdminProvisioner {
     private final UserBranchRepository userBranchRepository;
     private final UserBranchRoleRepository userBranchRoleRepository;
 
-    @Value("${app.branch-admin.email-domain}")
+    @Value("${branch-admin.email-domain}")
     private String emailDomain;
 
-    @Value("${app.branch-admin.common-password}")
+    @Value("${branch-admin.common-password}")
     private String commonPassword;
 
     public BranchAdminCredentials provision(BranchDao branch) {

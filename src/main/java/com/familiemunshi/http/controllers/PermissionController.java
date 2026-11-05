@@ -15,11 +15,12 @@ import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -146,6 +147,48 @@ public class PermissionController {
                 SuccessResponse.of(
                         "Permission retrieved successfully",
                         new PermissionResponse(permission)
+                )
+        );
+    }
+
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "Get my effective permissions",
+            description = """
+                    Retrieves the authenticated user's permissions
+                    based on database role assignments.
+                    Platform roles take priority over Branch roles.
+                    No scope or branch ID is required.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Permissions retrieved successfully"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Authentication required"
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "No active role assignment"
+                    )
+            }
+    )
+    public ResponseEntity<SuccessResponse<MyPermissionsResponse>>
+    getMyPermissions(Authentication authentication) {
+        UUID userId = UUID.fromString(
+                authentication.getName()
+        );
+
+        MyPermissionsResponse response =
+                permissionService.getMyPermissions(userId);
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(
+                        "My permissions retrieved successfully",
+                        response
                 )
         );
     }

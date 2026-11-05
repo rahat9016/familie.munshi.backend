@@ -37,4 +37,35 @@ public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformR
             @Param("scope") RoleScope scope,
             @Param("permissionCode") String permissionCode
     );
+
+
+    // GET USER'S ACTIVE PLATFORM ROLES
+    @Query("""
+                SELECT DISTINCT role.name
+                FROM UserPlatformRoleDao upr
+                JOIN upr.role role
+                WHERE upr.user.id = :userId
+                  AND upr.user.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch IS NULL
+                ORDER BY role.name
+            """)
+    List<String> findEffectiveRoleNames(@Param("userId") UUID userId, @Param("scope") RoleScope scope);
+
+    // GET USER'S ASSIGNED PLATFORM PERMISSIONS
+    @Query("""
+                SELECT DISTINCT permission.name
+                FROM UserPlatformRoleDao upr
+                JOIN upr.role role
+                JOIN role.permissions permission
+                WHERE upr.user.id = :userId
+                  AND upr.user.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch IS NULL
+                ORDER BY permission.name
+            """)
+    List<String> findEffectivePermissionCodes(@Param("userId") UUID userId, @Param("scope") RoleScope scope);
+
 }

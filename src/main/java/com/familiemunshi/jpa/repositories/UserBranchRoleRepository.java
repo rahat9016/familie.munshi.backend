@@ -1,5 +1,6 @@
 package com.familiemunshi.jpa.repositories;
 
+import com.familiemunshi.jpa.daos.BranchDao;
 import com.familiemunshi.jpa.daos.UserBranchRoleDao;
 import com.familiemunshi.service.enums.RoleScope;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -89,4 +90,20 @@ public interface UserBranchRoleRepository
             @Param("scope") RoleScope scope
     );
 
+
+    // GET USER'S AUTHORIZED ACTIVE BRANCHES
+    @Query("""
+                SELECT DISTINCT branch
+                FROM UserBranchRoleDao ubr
+                JOIN ubr.branch branch
+                JOIN ubr.role role
+                WHERE ubr.user.id = :userId
+                  AND ubr.user.isActive = true
+                  AND branch.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch.id = branch.id
+                ORDER BY branch.name
+            """)
+    List<BranchDao> findAuthorizedBranches(@Param("userId") UUID userId, @Param("scope") RoleScope scope);
 }

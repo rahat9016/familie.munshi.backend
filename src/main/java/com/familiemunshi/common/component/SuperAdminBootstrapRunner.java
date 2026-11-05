@@ -32,7 +32,6 @@ public class SuperAdminBootstrapRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-
         if (!enabled) {
             return;
         }

@@ -29,5 +29,12 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+.git
+.github
+.vscode
+*.log
+.env
+.env.*
+docker-compose*.yml
+README.md
+.DS_Store

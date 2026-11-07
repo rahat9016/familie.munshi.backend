@@ -1,51 +1,50 @@
-# ==========================================
-# Stage 1: Build Application
-# ==========================================
-FROM eclipse-temurin:21-jdk-alpine AS builder
 
-WORKDIR /app
+################ BUILD STAGE ################
 
-# Copy Maven wrapper and dependency files first
-# This improves Docker layer caching
-COPY .mvn/ .mvn
+FROM eclipse-temurin:26-jdk-noble AS builder
+
+WORKDIR /build
+
+# Copy Maven wrapper first for caching
+COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 
-# Make Maven wrapper executable
 RUN chmod +x mvnw
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline -B
+RUN ./mvnw -B dependency:go-offline
 
-# Copy application source
-COPY src ./src
+# Copy source code
+COPY src/ src/
 
-# Build executable JAR
-RUN ./mvnw clean package -DskipTests
+# Package Spring Boot application
+RUN ./mvnw -B -DskipTests clean package \
+    && cp target/backend-*.jar /build/app.jar
 
 
-# ==========================================
-# Stage 2: Production Runtime
-# ==========================================
-FROM eclipse-temurin:21-jre-alpine AS runner
+################ RUNTIME STAGE ################
 
-# Create non-root user and group
-RUN addgroup -S appgroup && \
-    adduser -S appuser -G appgroup
+FROM eclipse-temurin:26-jre-noble
+
+# Run as non-root user
+RUN groupadd --system --gid 1001 familie \
+    && useradd --system \
+        --uid 1001 \
+        --gid 1001 \
+        --shell /usr/sbin/nologin familie
 
 WORKDIR /app
 
-# Copy JAR and assign ownership directly
 COPY --from=builder \
-     --chown=appuser:appgroup \
-     /app/target/*.jar \
-     app.jar
+    --chown=familie:familie \
+    /build/app.jar /app/app.jar
 
-# Run application as non-root user
-USER appuser
+USER 1001
+
+ENV SPRING_PROFILES_ACTIVE=prod \
+    PORT=8080 \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 
 EXPOSE 8080
 
-# JVM configuration for containers
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
-
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

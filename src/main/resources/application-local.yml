@@ -20,6 +20,12 @@ minio:
   secret-key: minioadmin
   bucket-name: familiemunshi-bucket
 
+aws:
+  s3:
+    region: ${S3_REGION:eu-north-1}
+    bucket-name: ${S3_BUCKET_NAME:familie-munshi-storage}
+    public-base-url: ${S3_PUBLIC_BASE_URL:}
+
 logging:
   level:
     root: INFO

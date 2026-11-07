@@ -57,8 +57,10 @@ public class BranchService {
             ValidationUtil.validateMediaType(logoFile);
             requireActiveTransaction();
 
-            String filename =
-                    fileStorageService.uploadFile(logoFile);
+            String filename = fileStorageService.uploadPublicFile(
+                    logoFile,
+                    "branches/logos"
+            );
 
             registerUploadedFileCleanup(filename);
 
@@ -130,7 +132,7 @@ public class BranchService {
             }
 
             // UPLOAD NEW IMAGE FIRST
-            String newFilename = fileStorageService.uploadFile(newLogo);
+            String newFilename = fileStorageService.uploadPublicFile(newLogo, "branches");
 
             // UPDATE DOMAIN WITH NEW OBJECT KEY
             updatedBranch = updatedBranch.withLogoUrl(newFilename);

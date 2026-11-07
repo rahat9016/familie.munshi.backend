@@ -2,7 +2,7 @@ spring:
   application:
     name: familiemunshi
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE:local}
   servlet:
     multipart:
       enabled: true

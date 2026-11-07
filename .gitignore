@@ -30,7 +30,7 @@ build/
 !**/src/test/**/build/
 
 .git
-.github
+#.github
 .vscode
 *.log
 .env

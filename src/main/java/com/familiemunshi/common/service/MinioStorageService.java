@@ -1,5 +1,6 @@
 package com.familiemunshi.common.service;
 
+import com.familiemunshi.common.component.StorageFileSupport;
 import com.familiemunshi.common.configs.FileStorageProperties;
 import com.familiemunshi.common.configs.MinioProperties;
 import com.familiemunshi.common.exceptions.StorageException;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,106 +20,169 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        name = "storage.type",
+        havingValue = "minio"
+)
 public class MinioStorageService implements FileStorageService {
+
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
-    private final FileStorageProperties fileProperties;
+    private final StorageFileSupport fileSupport;
 
     @PostConstruct
     public void initBucket() {
         try {
+            String bucket = minioProperties.getBucketName();
+
             boolean exists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(minioProperties.getBucketName()).build());
+                    BucketExistsArgs.builder()
+                            .bucket(bucket)
+                            .build()
+            );
+
             if (!exists) {
                 minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket(minioProperties.getBucketName()).build());
-                log.info("Successfully created MinIO bucket: {}", minioProperties.getBucketName());
+                        MakeBucketArgs.builder()
+                                .bucket(bucket)
+                                .build()
+                );
+
+                log.info("MinIO bucket created: {}", bucket);
             }
+
         } catch (Exception e) {
-            log.error("Failed to initialize MinIO bucket: {}", minioProperties.getBucketName(), e);
-            throw new StorageException("Failed to initialize storage bucket", e);
+            throw new StorageException(
+                    "Failed to initialize MinIO bucket", e
+            );
         }
     }
 
+    @Override
     public String uploadFile(MultipartFile file) {
-        validateFile(file);
 
-        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-        String sanitizedFilename = originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
-        String filename = UUID.randomUUID() + "_" + sanitizedFilename;
+        String objectKey = fileSupport.privateKey(file);
+        return upload(file, objectKey);
+    }
 
-        try (InputStream inputStream = file.getInputStream()) {
+    @Override
+    public String uploadPublicFile(
+            MultipartFile file,
+            String directory
+    ) {
+
+        String objectKey = fileSupport.publicKey(
+                file,
+                directory
+        );
+
+        return upload(file, objectKey);
+    }
+
+    private String upload(
+            MultipartFile file,
+            String objectKey
+    ) {
+        try (InputStream stream = file.getInputStream()) {
+
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minioProperties.getBucketName())
-                            .object(filename)
-                            .stream(inputStream, file.getSize(), -1L)
+                            .object(objectKey)
+                            .stream(
+                                    stream,
+                                    file.getSize(),
+                                    -1L
+                            )
                             .contentType(file.getContentType())
-                            .build());
-            return filename;
+                            .build()
+            );
+
+            log.info("Uploaded to MinIO: {}", objectKey);
+
+            return objectKey;
+
         } catch (Exception e) {
-            log.error("Error uploading file to MinIO", e);
-            throw new StorageException("Failed to upload file", e);
+            throw new StorageException(
+                    "Failed to upload file to MinIO", e
+            );
         }
     }
 
+    @Override
     public InputStream downloadFile(String filename) {
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(minioProperties.getBucketName())
                             .object(filename)
-                            .build());
+                            .build()
+            );
+
         } catch (Exception e) {
-            log.error("Error downloading file from MinIO: {}", filename, e);
-            throw new StorageException("Failed to download file", e);
+            throw new StorageException(
+                    "Failed to download file from MinIO", e
+            );
         }
     }
 
-    public String getPresignedUrl(String filename, int expiryInMinutes) {
-        System.out.println(Http.Method.GET);
+    @Override
+    public String getPresignedUrl(
+            String filename,
+            int expiryInMinutes
+    ) {
+        if (expiryInMinutes < 1 || expiryInMinutes > 10080) {
+            throw new IllegalArgumentException(
+                    "Expiry must be between 1 and 10080 minutes"
+            );
+        }
+
         try {
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Http.Method.GET)
                             .bucket(minioProperties.getBucketName())
                             .object(filename)
-                            .expiry(expiryInMinutes, TimeUnit.MINUTES)
-                            .build());
+                            .expiry(
+                                    expiryInMinutes,
+                                    TimeUnit.MINUTES
+                            )
+                            .build()
+            );
+
         } catch (Exception e) {
-            log.error("Error generating presigned URL for file: {}", filename, e);
-            throw new StorageException("Failed to generate download URL", e);
+            throw new StorageException(
+                    "Failed to generate MinIO URL", e
+            );
         }
     }
 
+    @Override
+    public String getPublicUrl(String filename) {
+
+        if (filename == null || !filename.startsWith("public/")) {
+            throw new StorageException(
+                    "File is not a public asset"
+            );
+        }
+
+        return getPresignedUrl(filename, 60);
+    }
+
+    @Override
     public void deleteFile(String filename) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(minioProperties.getBucketName())
                             .object(filename)
-                            .build());
+                            .build()
+            );
+
         } catch (Exception e) {
-            log.error("Error deleting file from MinIO: {}", filename, e);
-            throw new StorageException("Failed to delete file", e);
-        }
-    }
-
-    private void validateFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new StorageException("Cannot upload empty or null file");
-        }
-
-        if (file.getSize() > fileProperties.getMaxSizeBytes()) {
-            throw new StorageException("File size exceeds maximum permitted size of " + fileProperties.getMaxSizeBytes() + " bytes");
-        }
-
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename != null && originalFilename.contains(".")) {
-            String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
-            if (!fileProperties.getAllowedExtensions().contains(extension)) {
-                throw new StorageException("File extension '" + extension + "' is not allowed");
-            }
+            throw new StorageException(
+                    "Failed to delete file from MinIO", e
+            );
         }
     }
 }

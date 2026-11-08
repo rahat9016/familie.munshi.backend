@@ -25,7 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     // This method is used to get a user by ID, but it only returns the user if they are active.
-    @Cacheable(value = "users", key = "#id")
+    @Cacheable(value = "users", key = "'active:' + #id")
     @Transactional(readOnly = true)
     public User getUser(UUID id){
         UserDao user = userRepository
@@ -36,7 +36,7 @@ public class UserService {
 
     // This method is used to get a user by ID without checking if the user is active or not.
     // It is useful for admin purposes where you might want to retrieve users regardless of their active status.
-    @Cacheable(value = "users", key = "#id")
+    @Cacheable(value = "users", key = "'all:' + #id")
     @Transactional(readOnly = true)
     public User getUserById(UUID id){
         UserDao user = userRepository.findById(id)

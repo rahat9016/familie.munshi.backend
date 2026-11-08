@@ -3,6 +3,7 @@ package com.familiemunshi.service.entities;
 import lombok.Builder;
 import lombok.With;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,5 +20,6 @@ public record User(
         boolean isActive,
         Instant createdAt,
         Instant updatedAt
-) {
+)  implements Serializable {
+    private static final long serialVersionUID = 1L;
 }

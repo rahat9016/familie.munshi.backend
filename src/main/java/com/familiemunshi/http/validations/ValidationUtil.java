@@ -204,7 +204,7 @@ public final class ValidationUtil {
         if (commonPassword == null
                 || commonPassword.isBlank()
                 || commonPassword.length()
-                <= MIN_BRANCH_ADMIN_PASSWORD_LENGTH) {
+                < MIN_BRANCH_ADMIN_PASSWORD_LENGTH) {
 
             throw new IllegalStateException(
                     "Branch Admin common password must "

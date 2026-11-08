@@ -243,10 +243,10 @@ public class SuperAdminBootstrapService {
             );
         }
 
-        if (password.length() <=8) {
+        if (password.length() < 8) {
             throw new IllegalStateException(
                     "Super Admin bootstrap password "
-                            + "must contain at least 12 characters"
+                            + "must contain at least 8 characters"
             );
         }
     }

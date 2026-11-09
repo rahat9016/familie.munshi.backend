@@ -18,6 +18,7 @@ public class RoleMapper {
                 .id(roleDao.getId())
                 .description(roleDao.getDescription())
                 .name(roleDao.getName())
+                .branch(BranchMapper.toEntity(roleDao.getBranch()))
                 .scope(roleDao.getScope())
                 .isSystem(roleDao.getIsSystem())
                 .isActive(roleDao.getIsActive())

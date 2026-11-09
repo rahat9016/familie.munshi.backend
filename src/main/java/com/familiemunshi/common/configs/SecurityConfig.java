@@ -74,10 +74,10 @@ public class SecurityConfig {
 
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)
-                        .permitAll().requestMatchers(GET, API_BASE + BRANCHES + "/**")
-                        .permitAll().requestMatchers(POST, API_BASE + BRANCHES + "/**")
-                        .permitAll().requestMatchers(PATCH, API_BASE + BRANCHES + "/**")
-                        .permitAll().requestMatchers("/error")
+                        .authenticated().requestMatchers(GET, API_BASE + BRANCHES + "/**")
+                        .authenticated().requestMatchers(POST, API_BASE + BRANCHES + "/**")
+                        .authenticated().requestMatchers(PATCH, API_BASE + BRANCHES + "/**")
+                        .authenticated().requestMatchers("/error")
                         .permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
     }
 }

@@ -167,6 +167,7 @@ public enum PermissionCode {
                 BRANCH_READ.getCode(),
                 BRANCH_UPDATE.getCode(),
                 BRANCH_DELETE.getCode(),
+                BRANCH_LIST.getCode(),
 
                 ROLE_CREATE.getCode(),
                 ROLE_READ.getCode(),

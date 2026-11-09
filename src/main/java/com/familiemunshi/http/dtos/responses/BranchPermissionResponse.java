@@ -9,6 +9,6 @@ public record BranchPermissionResponse(
         String branchCode,
         String branchName,
         List<String> roles,
-        List<String> permissions
+        List<ModulePermissionTreeResponse> permissions
 ) {
 }

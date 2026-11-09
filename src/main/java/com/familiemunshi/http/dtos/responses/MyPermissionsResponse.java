@@ -14,14 +14,14 @@ public record MyPermissionsResponse(
         String branchCode,
         String branchName,
         List<String> roles,
-        List<String> permissions,
+        List<ModulePermissionTreeResponse> permissions,
         List<BranchPermissionResponse> branches
 ) {
 
     public static MyPermissionsResponse platform(
             UUID userId,
             List<String> roles,
-            List<String> permissions
+            List<ModulePermissionTreeResponse> permissions
     ) {
         return new MyPermissionsResponse(
                 userId,

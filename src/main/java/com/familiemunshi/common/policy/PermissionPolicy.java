@@ -23,6 +23,7 @@ public final class PermissionPolicy {
             EnumSet.of(
                     PermissionCode.BRANCH_CREATE,
                     PermissionCode.BRANCH_READ,
+                    PermissionCode.BRANCH_LIST,
                     PermissionCode.BRANCH_UPDATE,
                     PermissionCode.BRANCH_DELETE,
 

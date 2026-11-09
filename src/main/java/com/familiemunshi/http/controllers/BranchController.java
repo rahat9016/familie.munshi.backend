@@ -96,7 +96,7 @@ public class BranchController {
 
 
     @GetMapping
-    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_READ')")
+    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_LIST')")
     @Operation(
             summary = "Get all branches",
             description = "Search and filter branches with pagination.",
@@ -104,7 +104,7 @@ public class BranchController {
                     @ApiResponse(responseCode = "200", description = "Branches retrieved successfully"),
                     @ApiResponse(responseCode = "400",description = "Invalid pagination parameters"),
                     @ApiResponse( responseCode = "401", description = "Authentication required"),
-                    @ApiResponse( responseCode = "403", description = "BRANCH_READ permission required")
+                    @ApiResponse( responseCode = "403", description = "BRANCH_LIST permission required")
             }
     )
     public ResponseEntity<PaginatedResponse<BranchResponse>> getAllBranches(
@@ -173,7 +173,7 @@ public class BranchController {
 
 
     @GetMapping(ID)
-    @PreAuthorize("@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_READ')")
+    @PreAuthorize("@permissionAuthorizationService.canReadBranch(authentication, #branchId)")
     @Operation(
             summary = "Get branch by ID", description = "Retrieve branch details with MinIO presigned logo URL.",
             responses = {

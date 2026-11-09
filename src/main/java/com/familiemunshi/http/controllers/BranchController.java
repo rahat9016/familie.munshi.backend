@@ -42,6 +42,9 @@ import static com.familiemunshi.common.utils.Constants.*;
 public class BranchController {
     private final BranchService branchService;
 
+    @PreAuthorize(
+            "@permissionAuthorizationService.hasPermission(authentication, 'BRANCH_CREATE')"
+    )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Create a new branch.",

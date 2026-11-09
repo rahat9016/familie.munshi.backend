@@ -43,6 +43,7 @@ public enum PermissionCode {
     BRANCH_READ("BRANCH_READ", "BRANCH", "View branches"),
     BRANCH_UPDATE("BRANCH_UPDATE", "BRANCH", "Update branches"),
     BRANCH_DELETE("BRANCH_DELETE", "BRANCH", "Delete branches"),
+    BRANCH_LIST("BRANCH_LIST", "BRANCH", "List branches"),
 
     // PRODUCT MANAGEMENT
     PRODUCT_CREATE("PRODUCT_CREATE", "PRODUCT", "Create products"),

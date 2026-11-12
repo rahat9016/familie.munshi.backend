@@ -3,25 +3,26 @@ package com.familiemunshi.service;
 import com.familiemunshi.common.policy.PermissionPolicy;
 import com.familiemunshi.common.utils.RoleNameUtil;
 import com.familiemunshi.common.utils.Util;
+import com.familiemunshi.jpa.daos.PermissionDao;
 import com.familiemunshi.jpa.daos.RoleDao;
-import com.familiemunshi.jpa.repositories.RoleRepository;
-import com.familiemunshi.jpa.repositories.UserBranchRepository;
-import com.familiemunshi.jpa.repositories.UserBranchRoleRepository;
-import com.familiemunshi.jpa.repositories.UserPlatformRoleRepository;
+import com.familiemunshi.jpa.repositories.*;
 import com.familiemunshi.mapper.RoleMapper;
 import com.familiemunshi.service.entities.Role;
+import com.familiemunshi.service.entities.RolePermissions;
+import com.familiemunshi.service.enums.PermissionCode;
 import com.familiemunshi.service.enums.RoleScope;
-import com.familiemunshi.service.exceptions.RoleAlreadyExistsException;
-import com.familiemunshi.service.exceptions.RoleNotFoundException;
+import com.familiemunshi.service.exceptions.*;
 import com.familiemunshi.service.filters.FindAllRolesFilter;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -30,6 +31,8 @@ public class RoleService {
     private final UserPlatformRoleRepository userPlatformRoleRepository;
     private final UserBranchRepository userBranchRepository;
     private final UserBranchRoleRepository userBranchRoleRepository;
+    private final PermissionAuthorizationService permissionAuthorizationService;
+    private final PermissionRepository permissionRepository;
 
     public Role createSystemRole(Role role) {
         Role newRole = role
@@ -54,25 +57,6 @@ public class RoleService {
                 .map(RoleMapper::toEntity)
                 .orElseThrow(() -> new RoleNotFoundException(roleId));
     }
-
-    public Role createBranchRole(UUID userId, UUID branchId, Role role) {
-        Role newRole = role
-                .withScope(RoleScope.BRANCH)
-//                .withName(RoleNameUtil.branchRole(role.name()))
-                .withIsSystem(false)
-                .withIsActive(true);
-        if(roleRepository.existsByNameIgnoreCaseAndScope(newRole.name(), newRole.scope())){
-            throw new RoleAlreadyExistsException(newRole.name());
-        }
-        // MAP THE ROLE ENTITY TO DAO
-        RoleDao roleMapper = RoleMapper.toDao(newRole);
-
-        // SAVE THE ROLE DAO TO THE DATABASE
-        RoleDao savedRole = roleRepository.save(roleMapper);
-
-        return RoleMapper.toEntity(savedRole);
-    }
-
 
     public Page<Role> getAllRolesByFilter(
             FindAllRolesFilter filter,
@@ -100,57 +84,97 @@ public class RoleService {
         return roles.map(RoleMapper::toEntity);
     }
 
-    public void requireBranchPermission(
+    @Transactional
+    public RolePermissions assignPlatformRolePermissions(
             UUID userId,
-            UUID branchId,
-            String permissionCode
+            RolePermissions rolePermissions
     ) {
-        if (!hasBranchPermission(userId, branchId, permissionCode)) {
-            throw new AccessDeniedException("Permission denied for this branch");
-        }
-    }
+        // CHECK CALLER'S PLATFORM PERMISSION
+        permissionAuthorizationService.requirePlatformPermission(
+                userId,
+                "ROLE_PERMISSION_MANAGE"
+        );
 
+        // FIND AND LOCK THE TARGET PLATFORM ROLE
+        RoleDao roleDao =
+                roleRepository.findPlatformRoleByIdForUpdate(
+                                rolePermissions.roleId(),
+                                RoleScope.PLATFORM
+                        )
+                        .orElseThrow(() ->
+                                new RoleNotFoundException(
+                                        rolePermissions.roleId()
+                                )
+                        );
 
-    public boolean hasBranchPermission(
-            Authentication authentication,
-            UUID branchId,
-            String permissionCode
-    ) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return false;
-        }
-
-        UUID userId;
-
-        try {
-            userId = UUID.fromString(authentication.getName());
-        } catch (IllegalArgumentException exception) {
-            return false;
-        }
-
-        return hasBranchPermission(userId, branchId, permissionCode);
-    }
-
-    private boolean hasBranchPermission(
-            UUID userId,
-            UUID branchId,
-            String permissionCode
-    ) {
-        if (userId == null || branchId == null || permissionCode == null) {
-            return false;
+        // PROTECT BUILT-IN SYSTEM ROLES
+        if (Boolean.TRUE.equals(roleDao.getIsSystem())) {
+            throw new InvalidRolePermissionAssignmentException(
+                    "Cannot assign permissions to a built-in system role"
+            );
         }
 
-        if (PermissionPolicy.isPlatformPermission(permissionCode)
-                && userPlatformRoleRepository.hasPermission(
-                userId, RoleScope.PLATFORM, permissionCode
-        )) {
-            return true;
+        if (!Boolean.TRUE.equals(roleDao.getIsActive())) {
+            throw new InvalidRolePermissionAssignmentException(
+                    "Target platform role is inactive"
+            );
         }
 
-        return PermissionPolicy.isBranchPermission(permissionCode)
-                && userBranchRepository.existsByUser_IdAndBranch_Id(userId, branchId)
-                && userBranchRoleRepository.hasBranchPermission(
-                userId, branchId, RoleScope.BRANCH, permissionCode
+        Set<String> requestedCodes = rolePermissions.permissionCodes();
+
+        // VALIDATE REQUESTED PERMISSIONS
+        for (String permissionCode : requestedCodes) {
+            if (!PermissionCode.isSuppoerted(permissionCode)) {
+                throw new InvalidPermissionCodeException(
+                        permissionCode
+                );
+            }
+
+            if (!PermissionPolicy.isPlatformPermission(permissionCode)) {
+                throw new InvalidRolePermissionAssignmentException(
+                        permissionCode + " is not a platform permission"
+                );
+            }
+        }
+
+        // LOAD CALLER'S EFFECTIVE PLATFORM PERMISSIONS
+        Set<String> callerPermissions = new HashSet<>(
+                userPlatformRoleRepository.findEffectivePermissionCodes(
+                        userId,
+                        RoleScope.PLATFORM
+                )
+        );
+
+        if (!callerPermissions.containsAll(requestedCodes)) {
+            throw new PermissionDeniedException(
+                    "You cannot assign permissions beyond your own access"
+            );
+        }
+
+        // LOAD SEEDED PERMISSION RECORDS
+        var permissions =
+                permissionRepository.findAllByNameIn(requestedCodes);
+
+        if (permissions.size() != requestedCodes.size()) {
+            throw new PermissionNotFoundException(
+                    String.join(", ", requestedCodes)
+            );
+        }
+
+        // ADD TO EXISTING PERMISSIONS
+        roleDao.getPermissions().addAll(permissions);
+
+        RoleDao savedRole = roleRepository.saveAndFlush(roleDao);
+
+        Set<String> assignedCodes =
+                savedRole.getPermissions()
+                        .stream()
+                        .map(PermissionDao::getName)
+                        .collect(Collectors.toSet());
+
+        return new RolePermissions(
+                savedRole.getId(),
+                assignedCodes
         );
     }
 

@@ -52,6 +52,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user profile.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User profile retrieved successfully."),

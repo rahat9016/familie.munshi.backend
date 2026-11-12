@@ -1,11 +1,12 @@
 package com.familiemunshi.http.controllers;
 
+import com.familiemunshi.http.dtos.requests.AssignRolePermissionsRequest;
 import com.familiemunshi.http.dtos.requests.CreateRoleRequest;
-import com.familiemunshi.http.dtos.responses.PaginatedResponse;
-import com.familiemunshi.http.dtos.responses.RoleResponse;
-import com.familiemunshi.http.dtos.responses.SuccessResponse;
+import com.familiemunshi.http.dtos.responses.*;
+import com.familiemunshi.service.PermissionService;
 import com.familiemunshi.service.RoleService;
 import com.familiemunshi.service.entities.Role;
+import com.familiemunshi.service.entities.RolePermissions;
 import com.familiemunshi.service.filters.FindAllRolesFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,9 +24,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.familiemunshi.common.utils.Constants.*;
 
@@ -35,6 +38,7 @@ import static com.familiemunshi.common.utils.Constants.*;
 @AllArgsConstructor
 public class SystemRoleController {
     private final RoleService roleService;
+    private final PermissionService permissionService;;
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<SuccessResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
@@ -82,5 +86,74 @@ public class SystemRoleController {
                 .toList();
 
         return ResponseEntity.ok(PaginatedResponse.of("Roles retrieved successfully", roles, response));
+    }
+
+
+    @PostMapping(
+            value = ID + PERMISSIONS,
+            consumes = "application/json"
+    )
+    @PreAuthorize(
+            "@permissionAuthorizationService.hasPermission(authentication, 'ROLE_PERMISSION_MANAGE')"
+    )
+    @Operation(
+            summary = "Assign permissions to a platform role",
+            description = "Adds permissions and returns the complete assigned permission tree.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "Permissions assigned successfully"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid permission assignment"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Authentication required"
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Permission denied"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Role or permission not found"
+                    )
+            }
+    )
+    public ResponseEntity<SuccessResponse<RolePermissionsResponse>>
+    assignRolePermissions(
+            Authentication authentication,
+            @PathVariable("id") UUID roleId,
+            @Valid @RequestBody AssignRolePermissionsRequest request
+    ) {
+        UUID userId = UUID.fromString(authentication.getName());
+
+        RolePermissions savedPermissions =
+                roleService.assignPlatformRolePermissions(
+                        userId,
+                        request.toEntity(roleId)
+                );
+
+        List<ModulePermissionTreeResponse> permissionTree =
+                permissionService.toModulePermissionTree(
+                        savedPermissions.permissionCodes()
+                                .stream()
+                                .toList()
+                );
+
+        RolePermissionsResponse response =
+                new RolePermissionsResponse(
+                        savedPermissions.roleId(),
+                        permissionTree
+                );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                SuccessResponse.of(
+                        "Platform role permissions assigned successfully",
+                        response
+                )
+        );
     }
 }

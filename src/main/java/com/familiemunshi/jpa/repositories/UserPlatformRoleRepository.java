@@ -2,7 +2,7 @@ package com.familiemunshi.jpa.repositories;
 
 import com.familiemunshi.jpa.daos.UserPlatformRoleDao;
 import com.familiemunshi.service.enums.RoleScope;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,18 +20,18 @@ public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformR
             UUID roleId
     );
 
-
     @Query("""
-    SELECT COUNT(upr) > 0
-    FROM UserPlatformRoleDao upr
-    JOIN upr.role role
-    JOIN role.permissions permission
-    WHERE upr.user.id = :userId
-      AND upr.user.isActive = true
-      AND role.isActive = true
-      AND role.scope = :scope
-      AND permission.name = :permissionCode
-    """)
+            SELECT COUNT(upr) > 0
+            FROM UserPlatformRoleDao upr
+            JOIN upr.role role
+            JOIN role.permissions permission
+            WHERE upr.user.id = :userId
+              AND upr.user.isActive = true
+              AND role.isActive = true
+              AND role.scope = :scope
+              AND role.branch IS NULL
+              AND permission.name = :permissionCode
+            """)
     boolean hasPermission(
             @Param("userId") UUID userId,
             @Param("scope") RoleScope scope,
@@ -39,7 +39,6 @@ public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformR
     );
 
 
-    // GET USER'S ACTIVE PLATFORM ROLES
     @Query("""
                 SELECT DISTINCT role.name
                 FROM UserPlatformRoleDao upr
@@ -53,7 +52,6 @@ public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformR
             """)
     List<String> findEffectiveRoleNames(@Param("userId") UUID userId, @Param("scope") RoleScope scope);
 
-    // GET USER'S ASSIGNED PLATFORM PERMISSIONS
     @Query("""
                 SELECT DISTINCT permission.name
                 FROM UserPlatformRoleDao upr

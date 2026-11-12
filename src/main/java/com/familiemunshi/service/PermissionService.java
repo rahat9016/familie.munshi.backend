@@ -175,7 +175,7 @@ public class PermissionService {
         );
     }
 
-    private List<ModulePermissionTreeResponse> toModulePermissionTree(
+    public List<ModulePermissionTreeResponse> toModulePermissionTree(
             List<String> permissionCodes
     ) {
         if (permissionCodes.isEmpty()) {

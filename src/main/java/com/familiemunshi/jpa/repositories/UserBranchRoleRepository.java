@@ -14,18 +14,18 @@ public interface UserBranchRoleRepository
         extends JpaRepository<UserBranchRoleDao, UUID> {
 
     @Query("""
-        SELECT DISTINCT permission.name
-        FROM UserBranchRoleDao ubr
-        JOIN ubr.role role
-        JOIN role.permissions permission
-        WHERE ubr.user.id = :userId
-          AND ubr.branch.id = :branchId
-          AND ubr.user.isActive = true
-          AND ubr.branch.isActive = true
-          AND role.isActive = true
-          AND role.scope = :scope
-          AND role.branch.id = :branchId
-    """)
+                SELECT DISTINCT permission.name
+                FROM UserBranchRoleDao ubr
+                JOIN ubr.role role
+                JOIN role.permissions permission
+                WHERE ubr.user.id = :userId
+                  AND ubr.branch.id = :branchId
+                  AND ubr.user.isActive = true
+                  AND ubr.branch.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch.id = :branchId
+            """)
     List<String> findEffectivePermissionCodes(
             @Param("userId") UUID userId,
             @Param("branchId") UUID branchId,
@@ -33,19 +33,19 @@ public interface UserBranchRoleRepository
     );
 
     @Query("""
-        SELECT COUNT(ubr) > 0
-        FROM UserBranchRoleDao ubr
-        JOIN ubr.role role
-        JOIN role.permissions permission
-        WHERE ubr.user.id = :userId
-          AND ubr.branch.id = :branchId
-          AND ubr.user.isActive = true
-          AND ubr.branch.isActive = true
-          AND role.isActive = true
-          AND role.scope = :scope
-          AND role.branch.id = :branchId
-          AND permission.name = :permissionCode
-    """)
+                SELECT COUNT(ubr) > 0
+                FROM UserBranchRoleDao ubr
+                JOIN ubr.role role
+                JOIN role.permissions permission
+                WHERE ubr.user.id = :userId
+                  AND ubr.branch.id = :branchId
+                  AND ubr.user.isActive = true
+                  AND ubr.branch.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch.id = :branchId
+                  AND permission.name = :permissionCode
+            """)
     boolean hasBranchPermission(
             @Param("userId") UUID userId,
             @Param("branchId") UUID branchId,
@@ -54,17 +54,17 @@ public interface UserBranchRoleRepository
     );
 
     @Query("""
-        SELECT DISTINCT role.name
-        FROM UserBranchRoleDao ubr
-        JOIN ubr.role role
-        WHERE ubr.user.id = :userId
-          AND ubr.branch.id = :branchId
-          AND ubr.user.isActive = true
-          AND ubr.branch.isActive = true
-          AND role.isActive = true
-          AND role.scope = :scope
-          AND role.branch.id = :branchId
-    """)
+                SELECT DISTINCT role.name
+                FROM UserBranchRoleDao ubr
+                JOIN ubr.role role
+                WHERE ubr.user.id = :userId
+                  AND ubr.branch.id = :branchId
+                  AND ubr.user.isActive = true
+                  AND ubr.branch.isActive = true
+                  AND role.isActive = true
+                  AND role.scope = :scope
+                  AND role.branch.id = :branchId
+            """)
     List<String> findRoleNames(
             @Param("userId") UUID userId,
             @Param("branchId") UUID branchId,
@@ -73,17 +73,17 @@ public interface UserBranchRoleRepository
 
 
     @Query("""
-    SELECT COUNT(ubr) > 0
-    FROM UserBranchRoleDao ubr
-    JOIN ubr.role role
-    WHERE ubr.user.id = :userId
-      AND ubr.user.isActive = false
-      AND ubr.branch.isActive = true
-      AND role.name = :roleName
-      AND role.scope = :scope
-      AND role.isActive = true
-      AND role.branch.id = ubr.branch.id
-""")
+                SELECT COUNT(ubr) > 0
+                FROM UserBranchRoleDao ubr
+                JOIN ubr.role role
+                WHERE ubr.user.id = :userId
+                  AND ubr.user.isActive = false
+                  AND ubr.branch.isActive = true
+                  AND role.name = :roleName
+                  AND role.scope = :scope
+                  AND role.isActive = true
+                  AND role.branch.id = ubr.branch.id
+            """)
     boolean hasPendingBranchAdminAssignment(
             @Param("userId") UUID userId,
             @Param("roleName") String roleName,

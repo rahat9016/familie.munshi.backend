@@ -63,12 +63,15 @@ public class SecurityConfig {
                         .requestMatchers(POST, API_BASE + AUTH + "/activate-branch-admin").permitAll()
 
                         // User management endpoints
-                        .requestMatchers(GET, API_BASE + USERS + "/me").authenticated().requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**").authenticated()
+                        .requestMatchers(GET, API_BASE + USERS + "/me")
+                        .authenticated()
+                        .requestMatchers(API_BASE + USERS, API_BASE + USERS + "/**")
+                        .authenticated()
 
                         // =========== PUBLIC — role management ===========
                         .requestMatchers(GET, API_BASE + SYSTEM + ROLES, API_BASE + SYSTEM + ROLES + "/**").authenticated().requestMatchers(POST, API_BASE + SYSTEM + ROLES).authenticated()
-
-                        // =========== PUBLIC — permission management ===========
+                        .requestMatchers( POST,API_BASE + SYSTEM + ROLES + "/*" + PERMISSIONS)
+                        .authenticated()
                         // =========== PERMISSION MANAGEMENT ===========
                         .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 

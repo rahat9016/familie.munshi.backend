@@ -23,86 +23,48 @@ public class PermissionAuthorizationService {
     private final UserBranchRepository userBranchRepository;
     private final UserBranchRoleRepository userBranchRoleRepository;
 
-    public boolean hasPermission(
-            Authentication authentication,
-            String permissionCode
-    ) {
+    public boolean hasPermission(Authentication authentication, String permissionCode) {
         UUID userId = getAuthenticatedUserId(authentication);
 
         if (userId == null) {
             return false;
         }
 
-        if (permissionCode == null
-                || !PermissionCode.getSupportedPermissions().contains(permissionCode)) {
+        if (permissionCode == null || !PermissionCode.getSupportedPermissions().contains(permissionCode)) {
             log.warn("Permission denied: unsupported code={}", permissionCode);
             return false;
         }
 
-        return userPlatformRoleRepository.hasPermission(
-                userId,
-                RoleScope.PLATFORM,
-                permissionCode
-        );
+        return userPlatformRoleRepository.hasPermission(userId, RoleScope.PLATFORM, permissionCode);
     }
 
 
-    public boolean canReadBranch(
-            Authentication authentication,
-            UUID branchId
-    ) {
+    public boolean canReadBranch(Authentication authentication, UUID branchId) {
         return hasBranchPermission(authentication, branchId, "BRANCH_READ");
     }
 
-    public boolean hasBranchPermission(
-            Authentication authentication,
-            UUID branchId,
-            String permissionCode
-    ) {
+    public boolean hasBranchPermission(Authentication authentication, UUID branchId, String permissionCode) {
         UUID userId = getAuthenticatedUserId(authentication);
 
         return hasBranchPermission(userId, branchId, permissionCode);
     }
 
-    public void requireBranchPermission(
-            UUID userId,
-            UUID branchId,
-            String permissionCode
-    ) {
+    public void requireBranchPermission(UUID userId, UUID branchId, String permissionCode) {
         if (!hasBranchPermission(userId, branchId, permissionCode)) {
             throw new AccessDeniedException("Permission denied for this branch");
         }
     }
 
-    private boolean hasBranchPermission(
-            UUID userId,
-            UUID branchId,
-            String permissionCode
-    ) {
+    private boolean hasBranchPermission(UUID userId, UUID branchId, String permissionCode) {
         if (userId == null || branchId == null || permissionCode == null) {
             return false;
         }
 
-        if (PermissionPolicy.isPlatformPermission(permissionCode)
-                && userPlatformRoleRepository.hasPermission(
-                userId,
-                RoleScope.PLATFORM,
-                permissionCode
-        )) {
+        if (PermissionPolicy.isPlatformPermission(permissionCode) && userPlatformRoleRepository.hasPermission(userId, RoleScope.PLATFORM, permissionCode)) {
             return true;
         }
 
-        return PermissionPolicy.isBranchPermission(permissionCode)
-                && userBranchRepository.existsByUser_IdAndBranch_Id(
-                userId,
-                branchId
-        )
-                && userBranchRoleRepository.hasBranchPermission(
-                userId,
-                branchId,
-                RoleScope.BRANCH,
-                permissionCode
-        );
+        return PermissionPolicy.isBranchPermission(permissionCode) && userBranchRepository.existsByUser_IdAndBranch_Id(userId, branchId) && userBranchRoleRepository.hasBranchPermission(userId, branchId, RoleScope.BRANCH, permissionCode);
     }
 
     private UUID getAuthenticatedUserId(Authentication authentication) {
@@ -121,6 +83,18 @@ public class PermissionAuthorizationService {
         } catch (IllegalArgumentException exception) {
             log.debug("Permission denied: principal is not a valid UUID");
             return null;
+        }
+    }
+
+
+    public void requirePlatformPermission(UUID userId, String permissionCode) {
+        if (userId == null || permissionCode == null || !PermissionPolicy.isPlatformPermission(permissionCode)) {
+            throw new AccessDeniedException("Platform permission required");
+        }
+        boolean allowed = userPlatformRoleRepository.hasPermission(userId, RoleScope.PLATFORM, permissionCode);
+
+        if (!allowed) {
+            throw new AccessDeniedException("You do not have the required platform permission");
         }
     }
 }

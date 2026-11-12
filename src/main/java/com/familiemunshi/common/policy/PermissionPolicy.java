@@ -39,7 +39,10 @@ public final class PermissionPolicy {
                     PermissionCode.USER_READ,
                     PermissionCode.USER_UPDATE,
                     PermissionCode.USER_DELETE,
-                    PermissionCode.USER_ROLE_MANAGE
+                    PermissionCode.USER_ROLE_MANAGE,
+
+                    PermissionCode.USER_ROLE_ASSIGN,
+                    PermissionCode.USER_ROLE_REMOVE
             );
 
     // ========================================

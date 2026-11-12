@@ -66,4 +66,6 @@ public interface UserPlatformRoleRepository  extends JpaRepository<UserPlatformR
             """)
     List<String> findEffectivePermissionCodes(@Param("userId") UUID userId, @Param("scope") RoleScope scope);
 
+
+
 }

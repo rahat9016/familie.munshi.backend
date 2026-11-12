@@ -72,6 +72,19 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE + SYSTEM + ROLES, API_BASE + SYSTEM + ROLES + "/**").authenticated().requestMatchers(POST, API_BASE + SYSTEM + ROLES).authenticated()
                         .requestMatchers( POST,API_BASE + SYSTEM + ROLES + "/*" + PERMISSIONS)
                         .authenticated()
+
+                        .requestMatchers(
+                                POST,
+                                API_BASE + SYSTEM + USERS + "/*" + ROLES
+                        )
+                        .authenticated()
+
+                        .requestMatchers(
+                                DELETE,
+                                API_BASE + SYSTEM + USERS + "/*" + ROLES + "/*"
+                        )
+                        .authenticated()
+
                         // =========== PERMISSION MANAGEMENT ===========
                         .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 

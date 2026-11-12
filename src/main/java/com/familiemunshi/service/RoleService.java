@@ -5,10 +5,12 @@ import com.familiemunshi.common.utils.RoleNameUtil;
 import com.familiemunshi.common.utils.Util;
 import com.familiemunshi.jpa.daos.PermissionDao;
 import com.familiemunshi.jpa.daos.RoleDao;
+import com.familiemunshi.jpa.daos.UserPlatformRoleDao;
 import com.familiemunshi.jpa.repositories.*;
 import com.familiemunshi.mapper.RoleMapper;
 import com.familiemunshi.service.entities.Role;
 import com.familiemunshi.service.entities.RolePermissions;
+import com.familiemunshi.service.entities.UserPlatformRole;
 import com.familiemunshi.service.enums.PermissionCode;
 import com.familiemunshi.service.enums.RoleScope;
 import com.familiemunshi.service.exceptions.*;
@@ -29,10 +31,9 @@ import java.util.stream.Collectors;
 public class RoleService {
     private final RoleRepository roleRepository;
     private final UserPlatformRoleRepository userPlatformRoleRepository;
-    private final UserBranchRepository userBranchRepository;
-    private final UserBranchRoleRepository userBranchRoleRepository;
     private final PermissionAuthorizationService permissionAuthorizationService;
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
 
     public Role createSystemRole(Role role) {
         Role newRole = role
@@ -82,6 +83,129 @@ public class RoleService {
         );
 
         return roles.map(RoleMapper::toEntity);
+    }
+
+    @Transactional
+    public UserPlatformRole assignUserPlatformRole(
+            UUID callerId,
+            UserPlatformRole mapping
+    ) {
+        permissionAuthorizationService.requirePlatformPermission(
+                callerId,
+                "USER_ROLE_ASSIGN"
+        );
+
+        RoleDao roleDao = roleRepository.findPlatformRoleByIdForUpdate(
+                        mapping.roleId(),
+                        RoleScope.PLATFORM
+                )
+                .orElseThrow(() ->
+                        new RoleNotFoundException(mapping.roleId())
+                );
+
+        if (!Boolean.TRUE.equals(roleDao.getIsActive())) {
+            throw new PermissionDeniedException(
+                    "Cannot assign an inactive platform role"
+            );
+        }
+
+        requireRoleWithinCallerAccess(callerId, roleDao);
+
+        var userDao = userRepository.findById(mapping.userId())
+                .orElseThrow(() ->
+                        new UserNotFoundException(mapping.userId())
+                );
+
+        if (!userDao.isActive()) {
+            throw new PermissionDeniedException(
+                    "Cannot assign a platform role to an inactive user"
+            );
+        }
+
+        if (userPlatformRoleRepository.existsByUser_IdAndRole_Id(
+                mapping.userId(),
+                mapping.roleId()
+        )) {
+            return mapping;
+        }
+
+        UserPlatformRoleDao assignment = UserPlatformRoleDao.builder()
+                .user(userDao)
+                .role(roleDao)
+                .build();
+
+        userPlatformRoleRepository.saveAndFlush(assignment);
+
+        return mapping;
+    }
+
+    @Transactional
+    public UserPlatformRole removeUserPlatformRole(
+            UUID callerId,
+            UserPlatformRole mapping
+    ) {
+        permissionAuthorizationService.requirePlatformPermission(
+                callerId,
+                "USER_ROLE_REMOVE"
+        );
+
+        RoleDao roleDao = roleRepository.findPlatformRoleByIdForUpdate(
+                        mapping.roleId(),
+                        RoleScope.PLATFORM
+                )
+                .orElseThrow(() ->
+                        new RoleNotFoundException(mapping.roleId())
+                );
+
+        /*
+         * Protect seeded system-role assignments.
+         * Super Admin lifecycle needs a separate controlled process.
+         */
+        if (Boolean.TRUE.equals(roleDao.getIsSystem())) {
+            throw new PermissionDeniedException(
+                    "Built-in system role assignments cannot be removed through this API"
+            );
+        }
+
+        requireRoleWithinCallerAccess(callerId, roleDao);
+
+        userRepository.findById(mapping.userId())
+                .orElseThrow(() ->
+                        new UserNotFoundException(mapping.userId())
+                );
+
+        userPlatformRoleRepository.findByUser_IdAndRole_Id(
+                mapping.userId(),
+                mapping.roleId()
+        ).ifPresent(assignment -> {
+            userPlatformRoleRepository.delete(assignment);
+            userPlatformRoleRepository.flush();
+        });
+
+        return mapping;
+    }
+
+    private void requireRoleWithinCallerAccess(
+            UUID callerId,
+            RoleDao roleDao
+    ) {
+        Set<String> callerPermissions = new HashSet<>(
+                userPlatformRoleRepository.findEffectivePermissionCodes(
+                        callerId,
+                        RoleScope.PLATFORM
+                )
+        );
+
+        Set<String> rolePermissions = roleDao.getPermissions()
+                .stream()
+                .map(PermissionDao::getName)
+                .collect(Collectors.toSet());
+
+        if (!callerPermissions.containsAll(rolePermissions)) {
+            throw new PermissionDeniedException(
+                    "You cannot manage assignments for a role beyond your own access"
+            );
+        }
     }
 
     @Transactional

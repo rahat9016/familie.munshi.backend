@@ -25,6 +25,8 @@ public class Constants {
 
     public static final String ID = "/{id}";
     public static final String BRANCH_ID = "/{branchId}";
+    public static final String USER_ID = "/{userId}";
+    public static final String ROLE_ID = "/{roleId}";
 
     // PERMISSIONS
     public static final String PERMISSIONS = "/permissions";

@@ -2,60 +2,71 @@ package com.familiemunshi.http.dtos.requests;
 
 
 import com.familiemunshi.jpa.daos.UserDao;
+import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @Setter
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateUserRequest {
-    @Schema(description = "First name of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "John")
+    @Schema(description = "First name", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "First name is required")
-    @Size(max = 255, min = 1, message = "First name cannot exceed 255 characters")
+    @Size(max = 120)
     private String firstName;
 
-    @Schema(description = "Last name of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "Doe")
+    @Schema(description = "Last name", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Last name is required")
-    @Size(max = 255, min = 1, message = "Last name cannot exceed 255 characters")
+    @Size(max = 120)
     private String lastName;
 
-    @Schema(description = "Email address of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "john.doe@example.com")
+    @Schema(description = "Email address", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Email is required")
-    @Size(max = 255, min = 1, message = "Email cannot exceed 255 characters")
     @Email(message = "Email should be valid")
+    @Size(max = 150)
     private String email;
 
-    @Schema(description = "Password for the user account", requiredMode = Schema.RequiredMode.REQUIRED, example = "123456")
+    @Schema(description = "Password", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Password is required")
-    @Size(max = 255, min = 6, message = "Password must be at least 6 characters long")
+    @Size(min = 6, max = 255)
     private String password;
 
-    @Schema(description = "Phone number of the user", requiredMode = Schema.RequiredMode.NOT_REQUIRED, example = "+1-234-567-8901")
-    @Size(max = 20, message = "Phone number cannot exceed 20 characters")
+    @Schema(description = "Phone number")
+    @Size(max = 20)
     private String phone;
 
-    @Schema(description = "Branch logo", type = "string", format = "binary", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @Schema(description = "Profile picture", type = "string", format = "binary")
     private MultipartFile profilePicture;
 
-    @Schema(description = "Indicates if the user is active", requiredMode = Schema.RequiredMode.NOT_REQUIRED, example = "true")
     @Builder.Default
     private Boolean isActive = true;
 
+    @Schema(
+            description = "Role ID required for PLATFORM and BRANCH roles",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    @NotNull(message = "Role ID is required")
+    private UUID roleId;
 
-    public UserDao toEntity() {
-        return UserDao.builder()
-                .firstName(this.firstName)
-                .lastName(this.lastName)
-                .email(this.email)
-                .password(this.password)
-                .phone(this.phone)
-                .isActive(Boolean.TRUE.equals(this.isActive))
+    @Schema(description = "Branch ID required for BRANCH roles")
+    private UUID branchId;
+
+    public User toEntity() {
+        return User.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .password(password)
+                .isActive(isActive == null || isActive)
                 .build();
     }
 }

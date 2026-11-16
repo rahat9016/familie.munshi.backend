@@ -1,7 +1,9 @@
 package com.familiemunshi.http.controllers;
 
+import com.familiemunshi.http.dtos.requests.CreateUserRequest;
 import com.familiemunshi.http.dtos.responses.PaginatedResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
+import com.familiemunshi.http.dtos.responses.UserPlatformRoleResponse;
 import com.familiemunshi.http.dtos.responses.UserResponse;
 import com.familiemunshi.service.UserService;
 import com.familiemunshi.service.entities.User;
@@ -19,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,6 +39,41 @@ import static com.familiemunshi.common.utils.Constants.*;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(
+            "@permissionAuthorizationService.hasPermission(authentication, 'USER_CREATE')"
+    )
+    @Operation(
+            summary = "Create a user",
+            description = "Create a user and assign a platform or branch role."
+    )
+    public ResponseEntity<SuccessResponse<UserResponse>> createUser(
+            @Valid @ModelAttribute CreateUserRequest request,
+            Authentication authentication
+    ) {
+
+        UUID callerId = UUID.fromString(authentication.getName());
+
+        User user = request.toEntity();
+
+        User response = userService.createUserWithRole(
+                callerId,
+                user,
+                request.getRoleId(),
+                request.getBranchId(),
+                request.getProfilePicture()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        SuccessResponse.of(
+                                "Platform role assigned successfully",
+                                new UserResponse(response)
+                        )
+                );
+    }
 
     @GetMapping(ID)
     @PreAuthorize(

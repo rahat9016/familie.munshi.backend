@@ -1,4 +1,3 @@
-
 package com.familiemunshi.mapper;
 
 import com.familiemunshi.http.dtos.responses.ProductClassificationResponse;
@@ -7,32 +6,50 @@ import com.familiemunshi.jpa.daos.ProductClassificationDao;
 import com.familiemunshi.service.entities.ProductClassification;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public final class ProductClassificationMapper {
+public class ProductClassificationMapper {
 
     private ProductClassificationMapper() {
-        throw new IllegalArgumentException("ProductClassificationMapper class cannot be instantiated");
+        throw new IllegalStateException("Utility class should not be instantiated");
     }
 
-    public static ProductClassification toEntity(
-            ProductClassificationDao dao
-    ) {
-        return new ProductClassification(
-                dao.getId(),
-                dao.getCode(),
-                dao.getName(),
-                dao.getLevel(),
-                dao.getParent() != null
+    public static ProductClassification toEntity(ProductClassificationDao dao) {
+        if (dao == null) return null;
+
+        return ProductClassification.builder()
+                .id(dao.getId())
+                .code(dao.getCode())
+                .name(dao.getName())
+                .level(dao.getLevel())
+                .parentId(dao.getParent() != null
                         ? dao.getParent().getId()
-                        : null,
-                dao.isActive()
-        );
+                        : null)
+                .isActive(dao.isActive())
+                .build();
+    }
+
+    public static ProductClassificationDao toDao(ProductClassification domain) {
+        if (domain == null) return null;
+
+        return ProductClassificationDao.builder()
+                .id(domain.id())
+                .code(domain.code())
+                .name(domain.name())
+                .level(domain.level())
+                .parent(domain.parentId() != null
+                        ? ProductClassificationDao.builder()
+                        .id(domain.parentId())
+                        .build()
+                        : null)
+                .isActive(domain.isActive())
+                .build();
     }
 
     public static ProductClassificationResponse toResponse(
             ProductClassification entity
     ) {
+        if (entity == null) return null;
+
         return new ProductClassificationResponse(
                 entity.id(),
                 entity.code(),
@@ -46,45 +63,40 @@ public final class ProductClassificationMapper {
     public static List<ProductClassificationTreeResponse> toTree(
             List<ProductClassification> classifications
     ) {
-        Map<UUID, List<ProductClassificationTreeResponse>> children =
-                new HashMap<>();
+        if (classifications == null || classifications.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        Map<UUID, ProductClassificationTreeResponse> nodes =
-                classifications.stream().collect(Collectors.toMap(
-                        ProductClassification::id,
-                        item -> new ProductClassificationTreeResponse(
-                                item.id(),
-                                item.code(),
-                                item.name(),
-                                item.level(),
-                                new ArrayList<>()
-                        )
-                ));
-
-        List<ProductClassificationTreeResponse> roots =
-                new ArrayList<>();
+        Map<UUID, ProductClassificationTreeResponse> nodes = new HashMap<>();
 
         for (ProductClassification item : classifications) {
+            nodes.put(
+                    item.id(),
+                    new ProductClassificationTreeResponse(
+                            item.id(),
+                            item.code(),
+                            item.name(),
+                            item.level(),
+                            new ArrayList<>()
+                    )
+            );
+        }
 
-            ProductClassificationTreeResponse node =
-                    nodes.get(item.id());
+        List<ProductClassificationTreeResponse> roots = new ArrayList<>();
+
+        for (ProductClassification item : classifications) {
+            ProductClassificationTreeResponse node = nodes.get(item.id());
 
             if (item.parentId() == null) {
                 roots.add(node);
                 continue;
             }
 
-            children.computeIfAbsent(
-                    item.parentId(),
-                    ignored -> new ArrayList<>()
-            ).add(node);
-        }
+            ProductClassificationTreeResponse parent = nodes.get(item.parentId());
 
-        for (ProductClassificationTreeResponse node : nodes.values()) {
-            List<ProductClassificationTreeResponse> nodeChildren =
-                    children.getOrDefault(node.id(), List.of());
-
-            node.children().addAll(nodeChildren);
+            if (parent != null) {
+                parent.children().add(node);
+            }
         }
 
         return roots;

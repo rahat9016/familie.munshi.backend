@@ -1,11 +1,14 @@
 package com.familiemunshi.service.entities;
 
 import com.familiemunshi.service.enums.ProductClassificationLevel;
-import lombok.*;
+import lombok.Builder;
+import lombok.With;
 
-import java.time.Instant;
 import java.util.UUID;
 
+
+@With
+@Builder
 public record ProductClassification(
         UUID id,
         String code,

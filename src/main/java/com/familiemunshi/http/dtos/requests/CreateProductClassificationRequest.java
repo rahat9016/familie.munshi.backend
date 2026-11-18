@@ -1,5 +1,7 @@
 package com.familiemunshi.http.dtos.requests;
 
+import com.familiemunshi.service.entities.ProductClassification;
+import com.familiemunshi.service.entities.User;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -15,14 +17,6 @@ import java.util.UUID;
         description = "The request body for creating a new product classification"
 )
 public class CreateProductClassificationRequest {
-    @Schema(
-            description = "The code of the product classification",
-            example = "ELECTRONICS",
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    @NotBlank
-    String code;
-
     @Schema(
             description = "The name of the product classification",
             example = "Electronics",
@@ -45,4 +39,12 @@ public class CreateProductClassificationRequest {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     UUID parentId;
+
+    public ProductClassification toEntity() {
+        return ProductClassification.builder()
+                .name(this.name)
+                .level(this.level)
+                .parentId(this.parentId)
+                .build();
+    }
 }

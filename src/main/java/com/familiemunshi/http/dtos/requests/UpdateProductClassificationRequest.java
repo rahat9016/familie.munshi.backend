@@ -1,5 +1,6 @@
 package com.familiemunshi.http.dtos.requests;
 
+import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
@@ -11,14 +12,6 @@ import java.util.UUID;
 )
 public class UpdateProductClassificationRequest
 {
-    @Schema(
-            description = "The code of the product classification",
-            example = "ELECTRONICS",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
-    )
-    @Size(min = 1, max = 100)
-    String code;
-
     @Schema(
             description = "The name of the product classification",
             example = "Electronics",
@@ -41,4 +34,11 @@ public class UpdateProductClassificationRequest
     )
     UUID parentId;
 
+    public ProductClassification toEntity() {
+        return ProductClassification.builder()
+                .name(this.name)
+                .level(this.level)
+                .parentId(this.parentId)
+                .build();
+    }
 }

@@ -34,6 +34,12 @@ spring:
 storage:
   type: ${STORAGE_TYPE:s3}
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 aws:
   s3:
     region: ${S3_REGION:eu-north-1}

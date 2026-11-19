@@ -43,7 +43,7 @@ USER 1001
 
 ENV SPRING_PROFILES_ACTIVE=prod \
     PORT=8080 \
-    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC --enable-native-access=ALL-UNNAMED"
 
 EXPOSE 8080
 

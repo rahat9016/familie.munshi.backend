@@ -56,6 +56,9 @@ public class SecurityConfig {
                         // =========== PUBLIC — infrastructure & API docs ===========
                         .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
 
+                        // =========== PUBLIC — landing / status page ===========
+                        .requestMatchers(GET, "/", "/index.html", "/favicon.ico").permitAll()
+
                         // =========== PUBLIC — authentication ===========
                         .requestMatchers(POST, API_BASE + AUTH + "/login").permitAll()
                         .requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll()

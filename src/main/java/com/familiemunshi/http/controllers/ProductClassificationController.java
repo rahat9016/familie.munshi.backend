@@ -113,7 +113,6 @@ public class ProductClassificationController {
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationTreeResponse>>>
     getClassificationTree() {
-
         List<ProductClassificationTreeResponse> response =
                 productClassificationService.getProductClassificationTree();
 

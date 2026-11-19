@@ -6,6 +6,7 @@ import com.familiemunshi.http.dtos.responses.ProductClassificationResponse;
 import com.familiemunshi.http.dtos.responses.ProductClassificationTreeResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
 import com.familiemunshi.service.ProductClassificationService;
+import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,7 +28,8 @@ import static com.familiemunshi.common.utils.Constants.*;
 @RestController
 @RequestMapping(API_BASE + PRODUCT_CLASSIFICATIONS)
 @RequiredArgsConstructor
-@Tag(name = "Product Classifications", description = "APIs for managing product classifications")
+@Tag(name = "Product Classifications",
+        description = "APIs for managing product classifications")
 public class ProductClassificationController {
 
     private final ProductClassificationService productClassificationService;
@@ -39,11 +41,16 @@ public class ProductClassificationController {
     @Operation(
             summary = "Create a new product classification.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Classification created."),
-                    @ApiResponse(responseCode = "400", description = "Invalid input."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated."),
-                    @ApiResponse(responseCode = "403", description = "Insufficient permissions."),
-                    @ApiResponse(responseCode = "409", description = "Classification conflict.")
+                    @ApiResponse(responseCode = "201",
+                            description = "Classification created."),
+                    @ApiResponse(responseCode = "400",
+                            description = "Invalid input."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated."),
+                    @ApiResponse(responseCode = "403",
+                            description = "Insufficient permissions."),
+                    @ApiResponse(responseCode = "409",
+                            description = "Classification conflict.")
             }
     )
     public ResponseEntity<SuccessResponse<ProductClassificationResponse>>
@@ -51,20 +58,16 @@ public class ProductClassificationController {
             @Valid @RequestBody CreateProductClassificationRequest request
     ) {
 
-        // 1. CONVERT REQUEST TO ENTITY
-        var classification = request.toEntity();
+        ProductClassification savedClassification =
+                productClassificationService.createProductClassification(
+                        request.toEntity()
+                );
 
-        // 2. CREATE CLASSIFICATION
-        ProductClassificationResponse response =
-                productClassificationService.createProductClassification(classification);
-
-        // 3. RETURN CREATED
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         SuccessResponse.of(
                                 "Product classification created successfully",
-                                response
+                                new ProductClassificationResponse(savedClassification)
                         )
                 );
     }
@@ -76,8 +79,10 @@ public class ProductClassificationController {
     @Operation(
             summary = "Get all product classifications.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classifications retrieved."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classifications retrieved."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<Page<ProductClassificationResponse>>>
@@ -100,8 +105,10 @@ public class ProductClassificationController {
     @Operation(
             summary = "Get product classifications in tree structure.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classification tree retrieved."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classification tree retrieved."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationTreeResponse>>>
@@ -125,8 +132,10 @@ public class ProductClassificationController {
     @Operation(
             summary = "Get root product classifications.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Root classifications retrieved."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Root classifications retrieved."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationResponse>>>
@@ -146,13 +155,16 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
     )
-    @GetMapping(ID+ PRODUCT_CLASSIFICATION_CHILDREN)
+    @GetMapping(ID + PRODUCT_CLASSIFICATION_CHILDREN)
     @Operation(
             summary = "Get child classifications.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Child classifications retrieved."),
-                    @ApiResponse(responseCode = "404", description = "Parent classification not found."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Child classifications retrieved."),
+                    @ApiResponse(responseCode = "404",
+                            description = "Parent classification not found."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationResponse>>>
@@ -178,9 +190,12 @@ public class ProductClassificationController {
     @Operation(
             summary = "Get product classifications by level.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classifications retrieved."),
-                    @ApiResponse(responseCode = "400", description = "Invalid classification level."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classifications retrieved."),
+                    @ApiResponse(responseCode = "400",
+                            description = "Invalid classification level."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationResponse>>>
@@ -206,9 +221,12 @@ public class ProductClassificationController {
     @Operation(
             summary = "Get product classification by ID.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classification retrieved."),
-                    @ApiResponse(responseCode = "404", description = "Classification not found."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classification retrieved."),
+                    @ApiResponse(responseCode = "404",
+                            description = "Classification not found."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<ProductClassificationResponse>>
@@ -234,11 +252,16 @@ public class ProductClassificationController {
     @Operation(
             summary = "Update a product classification.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classification updated."),
-                    @ApiResponse(responseCode = "400", description = "Invalid input."),
-                    @ApiResponse(responseCode = "404", description = "Classification not found."),
-                    @ApiResponse(responseCode = "409", description = "Classification conflict."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classification updated."),
+                    @ApiResponse(responseCode = "400",
+                            description = "Invalid input."),
+                    @ApiResponse(responseCode = "404",
+                            description = "Classification not found."),
+                    @ApiResponse(responseCode = "409",
+                            description = "Classification conflict."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<ProductClassificationResponse>>
@@ -246,19 +269,16 @@ public class ProductClassificationController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProductClassificationRequest request
     ) {
+        ProductClassification updatedClassification =
+                productClassificationService.updateProductClassification(
+                        id,
+                        request.toEntity()
+                );
 
-        // 1. CONVERT REQUEST TO ENTITY
-        var classification = request.toEntity();
-
-        // 2. UPDATE CLASSIFICATION
-        ProductClassificationResponse response =
-                productClassificationService.updateProductClassification(id, classification);
-
-        // 3. RETURN UPDATED
         return ResponseEntity.ok(
                 SuccessResponse.of(
                         "Product classification updated successfully",
-                        response
+                        new ProductClassificationResponse(updatedClassification)
                 )
         );
     }
@@ -270,10 +290,14 @@ public class ProductClassificationController {
     @Operation(
             summary = "Delete a product classification.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Classification deleted."),
-                    @ApiResponse(responseCode = "404", description = "Classification not found."),
-                    @ApiResponse(responseCode = "409", description = "Classification has active children."),
-                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+                    @ApiResponse(responseCode = "200",
+                            description = "Classification deleted."),
+                    @ApiResponse(responseCode = "404",
+                            description = "Classification not found."),
+                    @ApiResponse(responseCode = "409",
+                            description = "Classification has active children."),
+                    @ApiResponse(responseCode = "401",
+                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<Void>>

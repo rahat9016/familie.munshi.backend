@@ -32,7 +32,7 @@ public class ProductClassificationService {
 
     private final ProductClassificationRepository productClassificationRepository;
 
-    public ProductClassificationResponse createProductClassification(
+    public ProductClassification createProductClassification(
             ProductClassification classification
     ) {
         validateName(classification.name());
@@ -55,9 +55,7 @@ public class ProductClassificationService {
         ProductClassificationDao savedClassification =
                 productClassificationRepository.save(classificationDao);
 
-        return ProductClassificationMapper.toResponse(
-                ProductClassificationMapper.toEntity(savedClassification)
-        );
+        return ProductClassificationMapper.toEntity(savedClassification);
     }
 
     @Transactional(readOnly = true)
@@ -66,11 +64,8 @@ public class ProductClassificationService {
     ) {
         return productClassificationRepository
                 .findAllByIsActiveTrue(pageable)
-                .map(classification ->
-                        ProductClassificationMapper.toResponse(
-                                ProductClassificationMapper.toEntity(classification)
-                        )
-                );
+                .map(ProductClassificationMapper::toEntity)
+                .map(ProductClassificationResponse::new);
     }
 
     @Transactional(readOnly = true)
@@ -93,7 +88,7 @@ public class ProductClassificationService {
                 .findAllByParentIsNullAndIsActiveTrueOrderByNameAsc()
                 .stream()
                 .map(classification ->
-                        ProductClassificationMapper.toResponse(
+                        new ProductClassificationResponse(
                                 ProductClassificationMapper.toEntity(classification)
                         )
                 )
@@ -111,7 +106,7 @@ public class ProductClassificationService {
                 .findAllByParent_IdAndIsActiveTrueOrderByNameAsc(parentId)
                 .stream()
                 .map(classification ->
-                        ProductClassificationMapper.toResponse(
+                        new ProductClassificationResponse(
                                 ProductClassificationMapper.toEntity(classification)
                         )
                 )
@@ -129,7 +124,7 @@ public class ProductClassificationService {
                 .findAllByLevelAndIsActiveTrueOrderByNameAsc(level)
                 .stream()
                 .map(classification ->
-                        ProductClassificationMapper.toResponse(
+                        new ProductClassificationResponse(
                                 ProductClassificationMapper.toEntity(classification)
                         )
                 )
@@ -144,12 +139,12 @@ public class ProductClassificationService {
         ProductClassificationDao classification =
                 getActiveClassification(id);
 
-        return ProductClassificationMapper.toResponse(
+        return new ProductClassificationResponse(
                 ProductClassificationMapper.toEntity(classification)
         );
     }
 
-    public ProductClassificationResponse updateProductClassification(
+    public ProductClassification updateProductClassification(
             UUID id,
             ProductClassification classification
     ) {
@@ -185,6 +180,12 @@ public class ProductClassificationService {
         // Validate existing children against the new level.
         validateExistingChildren(id, updatedLevel);
 
+        if (!existingClassification.getName().equals(updatedName)) {
+
+            String updatedCode = generateUniqueCode(updatedName);
+
+            existingClassification.setCode(updatedCode);
+        }
         existingClassification.setName(updatedName);
         existingClassification.setLevel(updatedLevel);
         existingClassification.setParent(updatedParent);
@@ -192,9 +193,7 @@ public class ProductClassificationService {
         ProductClassificationDao updatedClassification =
                 productClassificationRepository.save(existingClassification);
 
-        return ProductClassificationMapper.toResponse(
-                ProductClassificationMapper.toEntity(updatedClassification)
-        );
+        return ProductClassificationMapper.toEntity(updatedClassification);
     }
 
 

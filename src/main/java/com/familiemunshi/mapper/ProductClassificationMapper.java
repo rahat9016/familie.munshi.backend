@@ -45,21 +45,6 @@ public class ProductClassificationMapper {
                 .build();
     }
 
-    public static ProductClassificationResponse toResponse(
-            ProductClassification entity
-    ) {
-        if (entity == null) return null;
-
-        return new ProductClassificationResponse(
-                entity.id(),
-                entity.code(),
-                entity.name(),
-                entity.level(),
-                entity.parentId(),
-                entity.isActive()
-        );
-    }
-
     public static List<ProductClassificationTreeResponse> toTree(
             List<ProductClassification> classifications
     ) {

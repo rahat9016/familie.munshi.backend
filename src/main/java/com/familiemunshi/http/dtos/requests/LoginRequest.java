@@ -11,13 +11,15 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 public class LoginRequest {
-    @Schema(description = "Email address of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "john.doe@example.com")
+    @Schema(description = "Email address of the user", requiredMode = Schema.RequiredMode.REQUIRED, example = "admin" +
+            "@gmail.com")
     @NotBlank(message = "Email is required")
     @Size(max = 255, min = 1, message = "Email cannot exceed 255 characters")
     @Email(message = "Email should be valid")
     private String email;
 
-    @Schema(description = "Password for the user account", requiredMode = Schema.RequiredMode.REQUIRED, example = "123456")
+    @Schema(description = "Password for the user account", requiredMode = Schema.RequiredMode.REQUIRED, example =
+            "minhazurrahman9016")
     @NotBlank(message = "Password is required")
     @Size(max = 255, min = 6, message = "Password must be at least 6 characters long")
     private String password;

@@ -4,12 +4,17 @@ import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
+import lombok.*;
+
 
 import java.util.UUID;
 
 @Schema(
         description = "The request body for updating a product classification"
 )
+@Getter
+@Setter
+@NoArgsConstructor
 public class UpdateProductClassificationRequest
 {
     @Schema(
@@ -23,6 +28,7 @@ public class UpdateProductClassificationRequest
     @Schema(
             description = "The level of the product classification",
             example = "CATEGORY",
+            allowableValues = {"GROUP", "PARENT_CATEGORY", "CATEGORY", "SEGMENT", "SUB_CATEGORY"},
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     ProductClassificationLevel level;

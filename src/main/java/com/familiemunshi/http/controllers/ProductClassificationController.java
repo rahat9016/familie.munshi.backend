@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import static com.familiemunshi.common.utils.Constants.*;
+
 @RestController
-@RequestMapping("/api/v1/classifications")
+@RequestMapping(API_BASE + PRODUCT_CLASSIFICATIONS)
 @RequiredArgsConstructor
 @Tag(name = "Product Classifications", description = "APIs for managing product classifications")
 public class ProductClassificationController {
@@ -94,10 +96,7 @@ public class ProductClassificationController {
         );
     }
 
-    @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
-    )
-    @GetMapping("/tree")
+    @GetMapping(PRODUCT_CLASSIFICATION_TREE)
     @Operation(
             summary = "Get product classifications in tree structure.",
             responses = {
@@ -122,7 +121,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
     )
-    @GetMapping("/roots")
+    @GetMapping(PRODUCT_CLASSIFICATION_ROOTS)
     @Operation(
             summary = "Get root product classifications.",
             responses = {
@@ -147,7 +146,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
     )
-    @GetMapping("/{id}/children")
+    @GetMapping(ID+ PRODUCT_CLASSIFICATION_CHILDREN)
     @Operation(
             summary = "Get child classifications.",
             responses = {
@@ -175,7 +174,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
     )
-    @GetMapping("/by-level/{level}")
+    @GetMapping(PRODUCT_CLASSIFICATION_BY_LEVEL + PRODUCT_CLASSIFICATION_LEVEL)
     @Operation(
             summary = "Get product classifications by level.",
             responses = {
@@ -231,7 +230,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_UPDATE')"
     )
-    @PatchMapping("/{id}")
+    @PatchMapping(ID)
     @Operation(
             summary = "Update a product classification.",
             responses = {
@@ -267,7 +266,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_DELETE')"
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping(ID)
     @Operation(
             summary = "Delete a product classification.",
             responses = {

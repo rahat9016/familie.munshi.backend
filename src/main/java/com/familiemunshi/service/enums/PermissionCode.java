@@ -84,7 +84,7 @@ public enum PermissionCode {
         return Arrays.stream(PermissionCode.values()).filter(permission -> permission.getCode().equalsIgnoreCase(code)).findFirst().orElseThrow(() -> new IllegalArgumentException("Invalid permission code: " + code));
     }
 
-    /**
+    /**antigra
      * Returns a list of all supported permission codes.
      *
      * @return a list of supported permission codes

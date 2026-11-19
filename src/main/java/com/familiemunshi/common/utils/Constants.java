@@ -34,6 +34,13 @@ public class Constants {
     // BRANCHES
     public static final String BRANCHES = "/branches";
 
+    public static final String PRODUCT_CLASSIFICATIONS = "/product-classifications";
+    public static final String PRODUCT_CLASSIFICATION_TREE = "/tree";
+    public static final String PRODUCT_CLASSIFICATION_ROOTS = "/roots";
+    public static final String PRODUCT_CLASSIFICATION_CHILDREN = "/children";
+    public static final String PRODUCT_CLASSIFICATION_BY_LEVEL = "/by-level";
+    public static final String PRODUCT_CLASSIFICATION_LEVEL = "/{level}";
+
 
     // Swagger & Actuator
     public static final String SWAGGER_UI = "/swagger-ui/**";

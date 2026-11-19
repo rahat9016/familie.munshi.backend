@@ -88,12 +88,20 @@ public class SecurityConfig {
                         // =========== PERMISSION MANAGEMENT ===========
                         .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 
+                        // =========== PRODUCT CLASSIFICATION ===========
+                        .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_TREE).permitAll()
+                        .requestMatchers(GET, API_BASE + PRODUCT_CLASSIFICATIONS, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
+                        .requestMatchers(POST, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
+                        .requestMatchers(PATCH, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
+                        .requestMatchers(DELETE, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)
                         .authenticated().requestMatchers(GET, API_BASE + BRANCHES + "/**")
                         .authenticated().requestMatchers(POST, API_BASE + BRANCHES + "/**")
                         .authenticated().requestMatchers(PATCH, API_BASE + BRANCHES + "/**")
                         .authenticated().requestMatchers("/error")
-                        .permitAll()).addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
+                        .permitAll())
+                .addFilterBefore(filterApiRequest, UsernamePasswordAuthenticationFilter.class).exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Authentication required or invalid token")).accessDeniedHandler((request, response, exception) -> errorUtils.writeErrorResponse(response, HttpStatus.FORBIDDEN.value(), "FORBIDDEN", "You do not have permission"))).build();
     }
 }

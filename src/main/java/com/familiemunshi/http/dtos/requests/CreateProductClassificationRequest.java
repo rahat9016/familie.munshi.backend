@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@Builder
+@NoArgsConstructor
 @Schema(
         description = "The request body for creating a new product classification"
 )

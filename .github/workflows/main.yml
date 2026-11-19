@@ -4,14 +4,67 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  test:
+    name: Test (migrations + app context)
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout source
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Java + Maven cache
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      # 3. Run all tests (Testcontainers uses the runner's Docker)
+      - name: Run tests
+        run: ./mvnw -B verify
+
+      # 4. On failure: show the test failure messages on the run summary page
+      - name: Write failure summary
+        if: failure()
+        run: |
+          {
+            echo "## ❌ Tests failed"
+            echo
+            for f in target/surefire-reports/*.txt; do
+              [ -f "$f" ] || continue
+              if grep -qE "FAILURE|ERROR" "$f"; then
+                echo "### $(basename "$f" .txt)"
+                echo '```'
+                grep -v -E "^\s+at " "$f" | head -60
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 5. Keep full reports for download
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
   docker:
     name: Build and Push Docker Image
+    needs: test
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
 
     permissions:

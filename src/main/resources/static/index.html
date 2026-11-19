@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Familie Munshi API</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2314b8a6'/%3E%3Cstop offset='1' stop-color='%236366f1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-weight='700' font-size='28' fill='white'%3EFM%3C/text%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #070b1a;
+      --blob-1: #14b8a6;
+      --blob-2: #6366f1;
+      --blob-3: #ec4899;
+      --blob-opacity: .55;
+      --glass: rgba(255, 255, 255, .07);
+      --glass-strong: rgba(255, 255, 255, .11);
+      --glass-border: rgba(255, 255, 255, .16);
+      --glass-highlight: rgba(255, 255, 255, .22);
+      --text: #f1f5f9;
+      --muted: #a5b0c5;
+      --accent: #5eead4;
+      --accent-2: #a5b4fc;
+      --ok: #4ade80;
+      --ok-soft: rgba(74, 222, 128, .14);
+      --err: #f87171;
+      --err-soft: rgba(248, 113, 113, .14);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, .14);
+      --info: #93c5fd;
+      --info-soft: rgba(147, 197, 253, .14);
+      --shadow: 0 8px 32px rgba(0, 0, 0, .35);
+      --radius: 20px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #eef2ff;
+        --blob-opacity: .45;
+        --glass: rgba(255, 255, 255, .55);
+        --glass-strong: rgba(255, 255, 255, .7);
+        --glass-border: rgba(255, 255, 255, .8);
+        --glass-highlight: rgba(255, 255, 255, .95);
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #0f766e;
+        --accent-2: #4f46e5;
+        --ok: #15803d;
+        --ok-soft: rgba(21, 128, 61, .12);
+        --err: #b91c1c;
+        --err-soft: rgba(185, 28, 28, .1);
+        --warn: #b45309;
+        --warn-soft: rgba(180, 83, 9, .12);
+        --info: #1d4ed8;
+        --info-soft: rgba(29, 78, 216, .1);
+        --shadow: 0 8px 32px rgba(30, 41, 99, .12);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ---------- animated background ---------- */
+    .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      opacity: var(--blob-opacity); will-change: transform;
+    }
+    .b1 { width: 520px; height: 520px; background: var(--blob-1); top: -140px; left: -120px; animation: float1 22s ease-in-out infinite; }
+    .b2 { width: 600px; height: 600px; background: var(--blob-2); top: 20%; right: -200px; animation: float2 26s ease-in-out infinite; }
+    .b3 { width: 420px; height: 420px; background: var(--blob-3); bottom: -160px; left: 30%; animation: float3 30s ease-in-out infinite; opacity: calc(var(--blob-opacity) * .7); }
+    .grid-overlay {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+    }
+    @keyframes float1 { 50% { transform: translate(120px, 90px) scale(1.1); } }
+    @keyframes float2 { 50% { transform: translate(-140px, 60px) scale(.92); } }
+    @keyframes float3 { 50% { transform: translate(90px, -110px) scale(1.08); } }
+    @media (prefers-reduced-motion: reduce) { .blob { animation: none; } }
+
+    /* ---------- glass primitive ---------- */
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow), inset 0 1px 0 var(--glass-highlight);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .glass { background: rgba(17, 24, 39, .88); }
+      @media (prefers-color-scheme: light) { .glass { background: rgba(255, 255, 255, .92); } }
+    }
+
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
+
+    /* ---------- nav ---------- */
+    nav {
+      position: sticky; top: 12px; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 14px 10px 10px; border-radius: 999px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 50%; flex: none;
+      background: linear-gradient(135deg, #14b8a6, #6366f1);
+      color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 14px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, .45);
+    }
+    .brand b { display: block; font-size: 15px; line-height: 1.2; }
+    .brand small { color: var(--muted); font-size: 12px; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 6px 12px; border-radius: 999px; transition: background .15s, color .15s;
+    }
+    .nav-links a:hover { background: var(--glass-strong); color: var(--text); }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px; flex: none;
+      padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      background: var(--glass-strong); color: var(--muted);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; position: relative; flex: none; }
+    .pill.ok  { color: var(--ok);  background: var(--ok-soft); }
+    .pill.err { color: var(--err); background: var(--err-soft); }
+    .pill.ok .dot::after {
+      content: ""; position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid currentColor; animation: pulse 1.8s ease-out infinite;
+    }
+    @keyframes pulse { from { transform: scale(.6); opacity: .8; } to { transform: scale(1.7); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .pill.ok .dot::after { animation: none; } }
+
+    /* ---------- hero ---------- */
+    .hero {
+      margin-top: 48px; display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--accent);
+    }
+    .hero h1 {
+      font-size: clamp(34px, 5.4vw, 60px); line-height: 1.05; letter-spacing: -.03em;
+      margin: 18px 0 16px; font-weight: 800;
+    }
+    .grad {
+      background: linear-gradient(90deg, #5eead4, #a5b4fc 50%, #f9a8d4);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    @media (prefers-color-scheme: light) {
+      .grad { background-image: linear-gradient(90deg, #0f766e, #4f46e5 50%, #be185d); }
+    }
+    .lead { color: var(--muted); font-size: 17px; margin: 0; max-width: 54ch; }
+
+    .status { padding: 24px; }
+    .status-head { display: flex; align-items: center; gap: 12px; }
+    .ring {
+      width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      background: var(--glass-strong); color: var(--muted);
+    }
+    .ring svg { width: 26px; height: 26px; }
+    .status.ok .ring  { color: var(--ok);  background: var(--ok-soft); }
+    .status.err .ring { color: var(--err); background: var(--err-soft); }
+    .status-head b { display: block; font-size: 18px; }
+    .status-head small { color: var(--muted); font-size: 13px; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .metric { padding: 12px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-border); }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric b { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+
+    /* ---------- sections ---------- */
+    section { margin-top: 64px; scroll-margin-top: 90px; }
+    .sec-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .sec-head h2 { margin: 0; font-size: clamp(22px, 3vw, 28px); letter-spacing: -.02em; }
+    .sec-head p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card { padding: 20px; transition: transform .2s ease, background .2s ease; }
+    .card:hover { transform: translateY(-3px); background: var(--glass-strong); }
+    .ic {
+      width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px;
+      background: linear-gradient(135deg, rgba(20, 184, 166, .25), rgba(99, 102, 241, .25));
+      border: 1px solid var(--glass-border); color: var(--accent);
+    }
+    .ic svg { width: 21px; height: 21px; }
+    .card h3 { margin: 0 0 6px; font-size: 16px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    /* ---------- tech ---------- */
+    .tech-groups { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .tech-group { padding: 20px; }
+    .tech-group h3 { margin: 0 0 14px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr)); gap: 10px; }
+    .logo-tile {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 14px; font-size: 14px; font-weight: 600;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+    .logo-tile:hover { transform: translateY(-2px); border-color: var(--brand); background: var(--glass-strong); }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 10px; flex: none; display: grid; place-items: center;
+      color: color-mix(in srgb, var(--brand) 70%, #fff);
+      background: color-mix(in srgb, var(--brand) 18%, transparent);
+      border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+    }
+    .logo-mark svg { width: 20px; height: 20px; }
+    .logo-tile > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @media (prefers-color-scheme: light) { .logo-mark { color: var(--brand); } }
+
+    /* ---------- roadmap ---------- */
+    .roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .rm { padding: 20px; position: relative; overflow: hidden; }
+    .rm::before {
+      content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+    .rm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .rm h3 { margin: 0; font-size: 16px; }
+    .rm p { margin: 0; color: var(--muted); font-size: 14px; }
+    .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge.next { color: var(--warn); background: var(--warn-soft); }
+    .badge.plan { color: var(--info); background: var(--info-soft); }
+
+    /* ---------- api ---------- */
+    .api { overflow: hidden; }
+    .api-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 16px 20px; border-top: 1px solid var(--glass-border);
+    }
+    .api-row:first-child { border-top: 0; }
+    .api-row code {
+      font-family: var(--mono); font-size: 13px; padding: 5px 10px; border-radius: 10px;
+      background: var(--glass-strong); border: 1px solid var(--glass-border); word-break: break-all;
+    }
+    .method { color: var(--accent); font-weight: 700; margin-right: 6px; }
+    .api-row span { color: var(--muted); font-size: 14px; }
+
+    .dev { margin-top: 64px; padding: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .avatar {
+      width: 56px; height: 56px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      background: linear-gradient(135deg, #14b8a6, #6366f1 60%, #ec4899);
+      color: #fff; font-weight: 800; font-size: 18px; letter-spacing: .5px;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, .45);
+    }
+    .dev small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .dev b { display: block; font-size: 18px; line-height: 1.3; }
+    .dev .role { color: var(--accent); font-size: 14px; font-weight: 600; }
+
+    footer {
+      margin-top: 56px; padding: 18px 22px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      color: var(--muted); font-size: 13px;
+    }
+
+    @media (max-width: 920px) {
+      .hero { grid-template-columns: 1fr; margin-top: 32px; }
+      .cards, .roadmap { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 600px) {
+      .cards, .roadmap, .tech-groups { grid-template-columns: 1fr; }
+      .logos { grid-template-columns: 1fr 1fr; }
+      .logo-tile { padding: 8px 10px; gap: 8px; font-size: 13px; }
+      .logo-mark { width: 30px; height: 30px; }
+      .brand small { display: none; }
+      section { margin-top: 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="wrap">
+
+  <nav class="glass" aria-label="Main">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">FM</div>
+      <div>
+        <b>Familie Munshi</b>
+        <small>Backend API</small>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#modules">Modules</a>
+      <a href="#technology">Technology</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#start">Get started</a>
+    </div>
+    <span id="pill" class="pill" role="status" aria-live="polite">
+      <span class="dot"></span><span id="pill-text">Checking…</span>
+    </span>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="eyebrow glass">● Familie Munshi Platform</span>
+      <h1>Business management,<br><span class="grad">built for every branch.</span></h1>
+      <p class="lead">
+        The REST backend powering Familie Munshi: secure authentication, multi-branch
+        administration, role-based permissions and product classification, with
+        inventory, sales and orders on the way.
+      </p>
+    </div>
+
+    <div id="status" class="glass status" aria-live="polite">
+      <div class="status-head">
+        <div class="ring">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div>
+          <b id="status-text">Checking status…</b>
+          <small>API is up and running</small>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>Response time</span><b id="latency">—</b></div>
+        <div class="metric"><span>Last checked</span><b id="checked">—</b></div>
+        <div class="metric"><span>Page uptime</span><b id="uptime">0s</b></div>
+        <div class="metric"><span>API base</span><b>/api/v1</b></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="modules" aria-labelledby="modules-h">
+      <div class="sec-head">
+        <div>
+          <h2 id="modules-h">Live modules</h2>
+          <p>Available in the API today.</p>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3>Authentication</h3>
+          <p>Sign up, login, JWT access &amp; refresh tokens and branch admin activation.</p>
+        </article>
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>
+          <h3>Branches</h3>
+          <p>Create and manage branches with logos and auto-provisioned branch admins.</p>
+        </article>
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M22 21a6 6 0 0 0-4-5.6"/></svg></div>
+          <h3>Users</h3>
+          <p>User management with profile pictures, search, filters and pagination.</p>
+        </article>
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3>Roles &amp; Permissions</h3>
+          <p>Platform and branch scoped roles with fine-grained permission control.</p>
+        </article>
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 12h12"/><path d="M9 18h6"/></svg></div>
+          <h3>Product Classification</h3>
+          <p>Five-level hierarchy: group, parent category, category, segment, sub-category.</p>
+        </article>
+        <article class="glass card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></div>
+          <h3>File Storage</h3>
+          <p>Secure image uploads with type and signature validation, served via signed URLs.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="technology" aria-labelledby="tech-h">
+      <div class="sec-head">
+        <div>
+          <h2 id="tech-h">Technology</h2>
+          <p>A modern, production-ready Java stack.</p>
+        </div>
+      </div>
+      <div class="tech-groups">
+        <div class="glass tech-group">
+          <h3>Core</h3>
+          <div class="logos">
+            <div class="logo-tile" style="--brand:#F89820"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.915 0 11.7.215C9.515 2.4 7.47 6.39 6.046 10.483c-1.064 1.024-3.633 2.81-3.711 3.551-.093.87 1.746 2.611 1.55 3.235-.198.625-1.304 1.408-1.014 1.939.1.188.823.011 1.277-.491a13.389 13.389 0 0 0-.017 2.14c.076.906.27 1.668.643 2.232.372.563.956.911 1.667.911.397 0 .727-.114 1.024-.264.298-.149.571-.33.91-.5.68-.34 1.634-.666 3.53-.604 1.903.062 2.872.39 3.559.704.687.314 1.15.664 1.925.664.767 0 1.395-.336 1.807-.9.412-.563.631-1.33.72-2.24.06-.623.055-1.32 0-2.066.454.45 1.117.604 1.213.424.29-.53-.816-1.314-1.013-1.937-.198-.624 1.642-2.366 1.549-3.236-.08-.748-2.707-2.568-3.748-3.586C16.428 6.374 14.308 2.394 12.13.215zm.175 6.038a2.95 2.95 0 0 1 2.943 2.942 2.95 2.95 0 0 1-2.943 2.943A2.95 2.95 0 0 1 9.148 8.98a2.95 2.95 0 0 1 2.942-2.942zM8.685 7.983a3.515 3.515 0 0 0-.145.997c0 1.951 1.6 3.55 3.55 3.55 1.95 0 3.55-1.598 3.55-3.55 0-.329-.046-.648-.132-.951.334.095.64.208.915.336a42.699 42.699 0 0 1 2.042 5.829c.678 2.545 1.01 4.92.846 6.607-.082.844-.29 1.51-.606 1.94-.315.431-.713.651-1.315.651-.593 0-.932-.27-1.673-.61-.741-.338-1.825-.694-3.792-.758-1.974-.064-3.073.293-3.821.669-.375.188-.659.373-.911.5s-.466.2-.752.2c-.53 0-.876-.209-1.16-.64-.285-.43-.474-1.101-.545-1.948-.141-1.693.176-4.069.823-6.614a43.155 43.155 0 0 1 1.934-5.783c.348-.167.749-.31 1.192-.425zm-3.382 4.362a.216.216 0 0 1 .13.031c-.166.56-.323 1.116-.463 1.665a33.849 33.849 0 0 0-.547 2.555 3.9 3.9 0 0 0-.2-.39c-.58-1.012-.914-1.642-1.16-2.08.315-.24 1.679-1.755 2.24-1.781zm13.394.01c.562.027 1.926 1.543 2.24 1.783-.246.438-.58 1.068-1.16 2.08a4.428 4.428 0 0 0-.163.309 32.354 32.354 0 0 0-.562-2.49 40.579 40.579 0 0 0-.482-1.652.216.216 0 0 1 .127-.03z"/></svg></span><span>Java</span></div>
+            <div class="logo-tile" style="--brand:#6DB33F"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m23.693 10.7058-4.73-8.1844c-.4094-.7106-1.4166-1.2942-2.2402-1.2942H7.2725c-.819 0-1.8308.5836-2.2402 1.2942L.307 10.7058c-.4095.7106-.4095 1.873 0 2.5837l4.7252 8.189c.4094.7107 1.4166 1.2943 2.2402 1.2943h9.455c.819 0 1.826-.5836 2.2402-1.2942l4.7252-8.189c.4095-.7107.4095-1.8732 0-2.5838zM10.9763 5.7547c0-.5365.4377-.9742.9742-.9742s.9742.4377.9742.9742v5.8217c0 .5366-.4377.9742-.9742.9742s-.9742-.4376-.9742-.9742zm.9742 12.4294c-3.6427 0-6.6077-2.965-6.6077-6.6077.0047-2.0896.993-4.0521 2.6685-5.304a.8657.8657 0 0 1 1.2142.1788.8657.8657 0 0 1-.1788 1.2143c-2.1602 1.6048-2.612 4.6592-1.0072 6.8194 1.6049 2.1603 4.6593 2.612 6.8195 1.0072 1.2378-.9177 1.9673-2.372 1.9673-3.9157a4.8972 4.8972 0 0 0-1.9861-3.925c-.386-.2824-.466-.8284-.1836-1.2143.2824-.386.8283-.466 1.2143-.1835 1.6895 1.2471 2.6826 3.2238 2.6873 5.3228 0 3.6474-2.965 6.6077-6.6077 6.6077z"/></svg></span><span>Spring Boot</span></div>
+            <div class="logo-tile" style="--brand:#6DB33F"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.59 2.066 11.993 0 3.41 2.066v6.612h4.557a3.804 3.804 0 0 0 0 .954H3.41v3.106C3.41 19.867 11.994 24 11.994 24s8.582-4.133 8.582-11.258V9.635h-4.545a3.616 3.616 0 0 0 0-.954h4.558zM12 12.262h-.006a3.109 3.109 0 1 1 .006 0zm-.006-4.579a.804.804 0 0 0-.37 1.52v.208l.238.237v.159l.159.159v.159l-.14.14.15.246v.159l-.16.189.223.222.246-.246V9.218a.804.804 0 0 0-.346-1.535zm0 .836a.299.299 0 1 1 .298-.299.299.299 0 0 1-.298.3z"/></svg></span><span>Spring Security</span></div>
+            <div class="logo-tile" style="--brand:#D63AFF"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.2 0v6.456L12 8.928l1.8-2.472V0zm3.6 6.456v3.072l2.904-.96L20.52 3.36l-2.928-2.136zm2.904 2.112l-1.8 2.496 2.928.936 6.144-1.992-1.128-3.432zM17.832 12l-2.928.936 1.8 2.496 6.144 1.992 1.128-3.432zm-1.128 3.432l-2.904-.96v3.072l3.792 5.232 2.928-2.136zM13.8 17.544L12 15.072l-1.8 2.472V24h3.6zm-3.6 0v-3.072l-2.904.96L3.48 20.64l2.928 2.136zm-2.904-2.112l1.8-2.496L6.168 12 .024 13.992l1.128 3.432zM6.168 12l2.928-.936-1.8-2.496-6.144-1.992-1.128 3.432zm1.128-3.432l2.904.96V6.456L6.408 1.224 3.48 3.36Z"/></svg></span><span>JWT</span></div>
+            <div class="logo-tile" style="--brand:#BCAE79"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.365 0L9.98 7.994h8.95L14.31 0H5.366zm-.431.248L.46 7.994l4.613 8.008L9.55 8.24 4.934.248zm13.992 7.75l-4.475 7.76 4.617 7.992 4.471-7.744-4.613-8.008zm-4.905 8.006l-8.95.002L9.688 24h8.946l-4.615-7.994.001-.002Z"/></svg></span><span>Hibernate / JPA</span></div>
+          </div>
+        </div>
+        <div class="glass tech-group">
+          <h3>Data</h3>
+          <div class="logos">
+            <div class="logo-tile" style="--brand:#4169E1"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5594 14.7228a.5269.5269 0 0 0-.0563-.1191c-.139-.2632-.4768-.3418-1.0074-.2321-1.6533.3411-2.2935.1312-2.5256-.0191 1.342-2.0482 2.445-4.522 3.0411-6.8297.2714-1.0507.7982-3.5237.1222-4.7316a1.5641 1.5641 0 0 0-.1509-.235C21.6931.9086 19.8007.0248 17.5099.0005c-1.4947-.0158-2.7705.3461-3.1161.4794a9.449 9.449 0 0 0-.5159-.0816 8.044 8.044 0 0 0-1.3114-.1278c-1.1822-.0184-2.2038.2642-3.0498.8406-.8573-.3211-4.7888-1.645-7.2219.0788C.9359 2.1526.3086 3.8733.4302 6.3043c.0409.818.5069 3.334 1.2423 5.7436.4598 1.5065.9387 2.7019 1.4334 3.582.553.9942 1.1259 1.5933 1.7143 1.7895.4474.1491 1.1327.1441 1.8581-.7279.8012-.9635 1.5903-1.8258 1.9446-2.2069.4351.2355.9064.3625 1.39.3772a.0569.0569 0 0 0 .0004.0041 11.0312 11.0312 0 0 0-.2472.3054c-.3389.4302-.4094.5197-1.5002.7443-.3102.064-1.1344.2339-1.1464.8115-.0025.1224.0329.2309.0919.3268.2269.4231.9216.6097 1.015.6331 1.3345.3335 2.5044.092 3.3714-.6787-.017 2.231.0775 4.4174.3454 5.0874.2212.5529.7618 1.9045 2.4692 1.9043.2505 0 .5263-.0291.8296-.0941 1.7819-.3821 2.5557-1.1696 2.855-2.9059.1503-.8707.4016-2.8753.5388-4.1012.0169-.0703.0357-.1207.057-.1362.0007-.0005.0697-.0471.4272.0307a.3673.3673 0 0 0 .0443.0068l.2539.0223.0149.001c.8468.0384 1.9114-.1426 2.5312-.4308.6438-.2988 1.8057-1.0323 1.5951-1.6698zM2.371 11.8765c-.7435-2.4358-1.1779-4.8851-1.2123-5.5719-.1086-2.1714.4171-3.6829 1.5623-4.4927 1.8367-1.2986 4.8398-.5408 6.108-.13-.0032.0032-.0066.0061-.0098.0094-2.0238 2.044-1.9758 5.536-1.9708 5.7495-.0002.0823.0066.1989.0162.3593.0348.5873.0996 1.6804-.0735 2.9184-.1609 1.1504.1937 2.2764.9728 3.0892.0806.0841.1648.1631.2518.2374-.3468.3714-1.1004 1.1926-1.9025 2.1576-.5677.6825-.9597.5517-1.0886.5087-.3919-.1307-.813-.5871-1.2381-1.3223-.4796-.839-.9635-2.0317-1.4155-3.5126zm6.0072 5.0871c-.1711-.0428-.3271-.1132-.4322-.1772.0889-.0394.2374-.0902.4833-.1409 1.2833-.2641 1.4815-.4506 1.9143-1.0002.0992-.126.2116-.2687.3673-.4426a.3549.3549 0 0 0 .0737-.1298c.1708-.1513.2724-.1099.4369-.0417.156.0646.3078.26.3695.4752.0291.1016.0619.2945-.0452.4444-.9043 1.2658-2.2216 1.2494-3.1676 1.0128zm2.094-3.988-.0525.141c-.133.3566-.2567.6881-.3334 1.003-.6674-.0021-1.3168-.2872-1.8105-.8024-.6279-.6551-.9131-1.5664-.7825-2.5004.1828-1.3079.1153-2.4468.079-3.0586-.005-.0857-.0095-.1607-.0122-.2199.2957-.2621 1.6659-.9962 2.6429-.7724.4459.1022.7176.4057.8305.928.5846 2.7038.0774 3.8307-.3302 4.7363-.084.1866-.1633.3629-.2311.5454zm7.3637 4.5725c-.0169.1768-.0358.376-.0618.5959l-.146.4383a.3547.3547 0 0 0-.0182.1077c-.0059.4747-.054.6489-.115.8693-.0634.2292-.1353.4891-.1794 1.0575-.11 1.4143-.8782 2.2267-2.4172 2.5565-1.5155.3251-1.7843-.4968-2.0212-1.2217a6.5824 6.5824 0 0 0-.0769-.2266c-.2154-.5858-.1911-1.4119-.1574-2.5551.0165-.5612-.0249-1.9013-.3302-2.6462.0044-.2932.0106-.5909.019-.8918a.3529.3529 0 0 0-.0153-.1126 1.4927 1.4927 0 0 0-.0439-.208c-.1226-.4283-.4213-.7866-.7797-.9351-.1424-.059-.4038-.1672-.7178-.0869.067-.276.1831-.5875.309-.9249l.0529-.142c.0595-.16.134-.3257.213-.5012.4265-.9476 1.0106-2.2453.3766-5.1772-.2374-1.0981-1.0304-1.6343-2.2324-1.5098-.7207.0746-1.3799.3654-1.7088.5321a5.6716 5.6716 0 0 0-.1958.1041c.0918-1.1064.4386-3.1741 1.7357-4.4823a4.0306 4.0306 0 0 1 .3033-.276.3532.3532 0 0 0 .1447-.0644c.7524-.5706 1.6945-.8506 2.802-.8325.4091.0067.8017.0339 1.1742.081 1.939.3544 3.2439 1.4468 4.0359 2.3827.8143.9623 1.2552 1.9315 1.4312 2.4543-1.3232-.1346-2.2234.1268-2.6797.779-.9926 1.4189.543 4.1729 1.2811 5.4964.1353.2426.2522.4522.2889.5413.2403.5825.5515.9713.7787 1.2552.0696.087.1372.1714.1885.245-.4008.1155-1.1208.3825-1.0552 1.717-.0123.1563-.0423.4469-.0834.8148-.0461.2077-.0702.4603-.0994.7662zm.8905-1.6211c-.0405-.8316.2691-.9185.5967-1.0105a2.8566 2.8566 0 0 0 .135-.0406 1.202 1.202 0 0 0 .1342.103c.5703.3765 1.5823.4213 3.0068.1344-.2016.1769-.5189.3994-.9533.6011-.4098.1903-1.0957.333-1.7473.3636-.7197.0336-1.0859-.0807-1.1721-.151zm.5695-9.2712c-.0059.3508-.0542.6692-.1054 1.0017-.055.3576-.112.7274-.1264 1.1762-.0142.4368.0404.8909.0932 1.3301.1066.887.216 1.8003-.2075 2.7014a3.5272 3.5272 0 0 1-.1876-.3856c-.0527-.1276-.1669-.3326-.3251-.6162-.6156-1.1041-2.0574-3.6896-1.3193-4.7446.3795-.5427 1.3408-.5661 2.1781-.463zm.2284 7.0137a12.3762 12.3762 0 0 0-.0853-.1074l-.0355-.0444c.7262-1.1995.5842-2.3862.4578-3.4385-.0519-.4318-.1009-.8396-.0885-1.2226.0129-.4061.0666-.7543.1185-1.0911.0639-.415.1288-.8443.1109-1.3505.0134-.0531.0188-.1158.0118-.1902-.0457-.4855-.5999-1.938-1.7294-3.253-.6076-.7073-1.4896-1.4972-2.6889-2.0395.5251-.1066 1.2328-.2035 2.0244-.1859 2.0515.0456 3.6746.8135 4.8242 2.2824a.908.908 0 0 1 .0667.1002c.7231 1.3556-.2762 6.2751-2.9867 10.5405zm-8.8166-6.1162c-.025.1794-.3089.4225-.6211.4225a.5821.5821 0 0 1-.0809-.0056c-.1873-.026-.3765-.144-.5059-.3156-.0458-.0605-.1203-.178-.1055-.2844.0055-.0401.0261-.0985.0925-.1488.1182-.0894.3518-.1226.6096-.0867.3163.0441.6426.1938.6113.4186zm7.9305-.4114c.0111.0792-.049.201-.1531.3102-.0683.0717-.212.1961-.4079.2232a.5456.5456 0 0 1-.075.0052c-.2935 0-.5414-.2344-.5607-.3717-.024-.1765.2641-.3106.5611-.352.297-.0414.6111.0088.6356.1851z"/></svg></span><span>PostgreSQL</span></div>
+            <div class="logo-tile" style="--brand:#CC0200"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m3.02 21.055 1.12-.23c1.054-.219 2.114-.415 3.161-.66a4.955 4.952 0 0 0 3.696-3.915 6.06 6.057 0 0 0 .085-1.153l.366-.09a4.936 4.933 0 0 0 3.75-3.717 3.8 3.798 0 0 0 .128-1.06c-.002-.096 0-.193 0-.305.094-.023.18-.047.267-.067a4.552 4.549 0 0 0 2.68-1.755 5.772 5.769 0 0 0 1.005-4.854c-.021-.088-.035-.179-.061-.264a.63.629 0 0 0-.728-.432l-3.184.652-3.485.716-4.002.822q-2.186.449-4.373.893a1.125 1.125 0 0 1-.422.06c-.007-.074-.017-.14-.017-.204-.001-1.12.002-2.243-.005-3.364a.324.324 0 0 1 .174-.307 8.493 8.488 0 0 1 1.9-.86A17.205 17.194 0 0 1 7.827.315C8.373.23 8.922.181 9.47.12a26.795 26.777 0 0 1 3.526-.102c.496.01.992.051 1.487.097.542.051 1.085.11 1.623.192a14.482 14.472 0 0 1 4.007 1.124c.262.123.509.28.764.422a.215.215 0 0 1 .122.223c-.004.054 0 .11 0 .163v19.519c0 .347.045.28-.262.472a8.437 8.432 0 0 1-1.961.857 16.78 16.769 0 0 1-2.851.63c-.6.08-1.2.146-1.804.207-.277.03-.556.035-.835.043-.564.015-1.128.041-1.691.03-.636-.014-1.272-.059-1.907-.099a20.054 20.041 0 0 1-2.519-.332 13.423 13.415 0 0 1-3.224-.976c-.273-.13-.53-.29-.797-.435a.246.246 0 0 1-.144-.248c.008-.23 0-.46.003-.69 0-.049.01-.096.016-.163zm9.985-10.652a1.248 1.248 0 0 1-.09.55 2.624 2.622 0 0 1-2.045 1.84c-1.3.28-2.607.537-3.912.805l-.57.114a1.147 1.146 0 1 0 .403 2.256c.595-.11 1.186-.242 1.779-.363.064-.014.128-.022.209-.035a2.584 2.582 0 0 1-.55 1.41A2.801 2.8 0 0 1 6.516 18c-1.103.223-2.206.45-3.308.676-.052.01-.106.013-.156.02-.048-.146-.061-10.38-.014-10.63l14.048-2.883a1.523 1.522 0 0 1-.016.18 3.438 3.436 0 0 1-.738 1.502 2.399 2.397 0 0 1-1.426.804c-1.11.216-2.218.45-3.326.677l-.96.196a1.168 1.168 0 0 0-.953 1.057 1.147 1.147 0 0 0 .875 1.186 1.747 1.746 0 0 0 .807-.054c.492-.1.983-.203 1.475-.304.053-.01.108-.014.18-.023z"/></svg></span><span>Flyway</span></div>
+            <div class="logo-tile" style="--brand:#FF4438"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.71 13.145c-1.66 2.092-3.452 4.483-7.038 4.483-3.203 0-4.397-2.825-4.48-5.12.701 1.484 2.073 2.685 4.214 2.63 4.117-.133 6.94-3.852 6.94-7.239 0-4.05-3.022-6.972-8.268-6.972-3.752 0-8.4 1.428-11.455 3.685C2.59 6.937 3.885 9.958 4.35 9.626c2.648-1.904 4.748-3.13 6.784-3.744C8.12 9.244.886 17.05 0 18.425c.1 1.261 1.66 4.648 2.424 4.648.232 0 .431-.133.664-.365a100.49 100.49 0 0 0 5.54-6.765c.222 3.104 1.748 6.898 6.014 6.898 3.819 0 7.604-2.756 9.33-8.965.2-.764-.73-1.361-1.261-.73zm-4.349-5.013c0 1.959-1.926 2.922-3.685 2.922-.941 0-1.664-.247-2.235-.568 1.051-1.592 2.092-3.225 3.21-4.973 1.972.334 2.71 1.43 2.71 2.619z"/></svg></span><span>Redis</span></div>
+          </div>
+        </div>
+        <div class="glass tech-group">
+          <h3>Cloud &amp; Storage</h3>
+          <div class="logos">
+            <div class="logo-tile" style="--brand:#FF9900"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.429 17.571h10.714V6.857H6.429v10.714ZM18 6.857h1.714v.857H18V9.43h1.714v.857H18v1.285h1.714v.858H18v1.714h1.714V15H18v1.714h1.714v.857H18v.059a.8.8 0 0 1-.799.799h-.058v1.714h-.857v-1.714H14.57v1.714h-.857v-1.714H12.43v1.714h-.858v-1.714H9.857v1.714H9v-1.714H7.286v1.714h-.857v-1.714H6.37a.8.8 0 0 1-.799-.8v-.058H4.286v-.857H5.57V15H4.286v-.857H5.57v-1.714H4.286v-.858H5.57v-1.285H4.286v-.857H5.57V7.714H4.286v-.857H5.57V6.8a.8.8 0 0 1 .8-.799h.058V4.286h.857V6H9V4.286h.857V6h1.714V4.286h.858V6h1.285V4.286h.857V6h1.715V4.286h.857V6h.058a.8.8 0 0 1 .799.799v.058ZM12.429 23.09a.054.054 0 0 1-.054.053H.91a.053.053 0 0 1-.053-.053V11.625c0-.03.024-.054.053-.054h2.52v-.857H.91a.911.911 0 0 0-.91.91V23.09c0 .502.408.91.91.91h11.465a.91.91 0 0 0 .91-.91V21h-.856ZM24 .91v11.465a.91.91 0 0 1-.91.91h-2.52v-.856h2.519a.054.054 0 0 0 .053-.054V.91a.053.053 0 0 0-.053-.053H11.625a.053.053 0 0 0-.054.053v2.52h-.857V.91c0-.502.409-.91.91-.91H23.09a.91.91 0 0 1 .91.91Z"/></svg></span><span>AWS EC2</span></div>
+            <div class="logo-tile" style="--brand:#569A31"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.913 13.147l.12-.895c.947.576 1.258.922 1.354 1.071-.16.031-.562.046-1.474-.176zm-2.174 7.988a.547.547 0 0 0-.005.073c0 .084-.207.405-1.124.768a10.28 10.28 0 0 1-1.438.432c-1.405.325-3.128.504-4.853.504-4.612 0-7.412-1.184-7.412-1.704a.547.547 0 0 0-.005-.073L1.81 5.602c.135.078.28.154.432.227.042.02.086.038.128.057.134.062.272.122.417.18l.179.069c.154.058.314.114.478.168.043.013.084.029.13.043.207.065.423.127.646.187l.176.044c.175.044.353.087.534.127a23.414 23.414 0 0 0 .843.17l.121.023c.252.045.508.085.768.122.071.011.144.02.216.03.2.027.4.053.604.077l.24.027c.245.026.49.05.74.07l.081.009c.275.022.552.04.83.056l.233.012c.21.01.422.018.633.025a33.088 33.088 0 0 0 2.795-.026l.232-.011c.278-.016.555-.034.83-.056l.08-.008c.25-.02.497-.045.742-.072l.238-.026c.205-.024.408-.05.609-.077.07-.01.141-.019.211-.03.261-.037.519-.078.772-.122l.111-.02c.215-.04.427-.082.634-.125l.212-.047c.186-.041.368-.085.546-.13l.166-.042c.225-.06.444-.122.654-.189.04-.012.077-.026.115-.038a10.6 10.6 0 0 0 .493-.173c.058-.021.114-.044.17-.066.15-.06.293-.12.43-.185.038-.017.079-.034.116-.052.153-.073.3-.15.436-.228l-.976 7.245c-2.488-.78-5.805-2.292-7.311-3a1.09 1.09 0 0 0-1.088-1.085c-.6 0-1.088.489-1.088 1.088 0 .6.488 1.089 1.088 1.089.196 0 .378-.056.537-.148 1.72.812 5.144 2.367 7.715 3.15zm-7.42-20.047c5.677 0 9.676 1.759 9.75 2.736l-.014.113c-.01.033-.031.067-.048.101-.015.028-.026.057-.047.087-.024.033-.058.068-.09.102-.028.03-.051.06-.084.09-.038.035-.087.07-.133.105-.04.03-.074.06-.119.091-.053.036-.116.071-.177.107-.05.03-.095.06-.15.09-.068.036-.147.073-.222.11-.059.028-.114.057-.177.085-.084.038-.177.074-.268.111-.068.027-.13.054-.203.082-.097.036-.205.072-.31.107-.075.026-.148.053-.228.079-.111.035-.233.069-.35.103-.085.024-.165.05-.253.073-.124.034-.258.065-.389.098-.093.022-.181.046-.278.068-.139.032-.287.061-.433.091-.098.02-.191.041-.293.06-.155.03-.32.057-.482.084-.1.018-.198.036-.302.052-.166.026-.342.048-.515.072-.11.014-.213.03-.325.044-.181.023-.372.041-.56.06-.11.012-.218.025-.332.036-.188.016-.386.029-.58.043-.122.009-.24.02-.364.028-.207.012-.422.02-.635.028-.12.005-.234.012-.354.016a35.605 35.605 0 0 1-2.069 0c-.12-.004-.234-.011-.352-.016-.214-.008-.43-.016-.637-.028-.122-.008-.238-.02-.36-.027-.195-.015-.394-.028-.584-.044-.11-.01-.215-.024-.324-.035-.19-.02-.384-.038-.568-.06l-.315-.044c-.176-.024-.355-.046-.525-.073-.1-.015-.192-.033-.29-.05-.167-.028-.335-.055-.494-.086-.096-.018-.183-.038-.276-.056-.151-.032-.305-.062-.45-.095-.09-.02-.173-.043-.26-.064-.138-.034-.277-.067-.407-.102-.082-.022-.157-.046-.235-.069a11.75 11.75 0 0 1-.368-.108c-.075-.024-.141-.049-.213-.073-.11-.037-.223-.075-.325-.113-.067-.025-.125-.051-.188-.077-.096-.038-.195-.076-.282-.115-.06-.027-.11-.054-.166-.08-.08-.039-.162-.077-.233-.116-.052-.028-.094-.055-.142-.084-.063-.038-.13-.075-.185-.113-.043-.029-.075-.058-.113-.086-.048-.037-.098-.073-.139-.11-.032-.029-.054-.057-.08-.087-.033-.035-.069-.07-.093-.104-.02-.03-.031-.058-.046-.086-.018-.035-.039-.068-.049-.102l-.015-.113c.076-.977 4.074-2.736 9.748-2.736zm12.182 12.124c-.118-.628-.84-1.291-2.31-2.128l.963-7.16a.531.531 0 0 0 .005-.073C22.16 1.581 16.447 0 11.32 0 6.194 0 .482 1.581.482 3.851a.58.58 0 0 0 .005.072L2.819 21.25c.071 2.002 5.236 2.75 8.5 2.75 1.805 0 3.615-.188 5.098-.531.598-.138 1.133-.3 1.592-.48 1.18-.467 1.789-1.053 1.813-1.739l.945-7.018c.557.131 1.016.197 1.389.197.54 0 .902-.137 1.134-.413a.956.956 0 0 0 .21-.804Z"/></svg></span><span>AWS S3</span></div>
+            <div class="logo-tile" style="--brand:#C72E49"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.2072.006c-.6216-.0478-1.2.1943-1.6211.582a2.15 2.15 0 0 0-.0938 3.0352l3.4082 3.5507a3.042 3.042 0 0 1-.664 4.6875l-.463.2383V7.2853a15.4198 15.4198 0 0 0-8.0174 10.4862v.0176l6.5487-3.3281v7.621L13.7794 24V13.6817l.8965-.4629a4.4432 4.4432 0 0 0 1.2207-7.0292l-3.371-3.5254a.7489.7489 0 0 1 .037-1.0547.7522.7522 0 0 1 1.0567.0371l.4668.4863-.006.0059 4.0704 4.2441a.0566.0566 0 0 0 .082 0 .06.06 0 0 0 0-.0703l-3.1406-5.1425-.1484.1425.1484-.1445C14.4945.3926 13.8287.0538 13.2072.006Zm-.9024 9.8652v2.9941l-4.1523 2.1484a13.9787 13.9787 0 0 1 2.7676-3.9277 14.1784 14.1784 0 0 1 1.3847-1.2148z"/></svg></span><span>MinIO</span></div>
+          </div>
+        </div>
+        <div class="glass tech-group">
+          <h3>DevOps &amp; Quality</h3>
+          <div class="logos">
+            <div class="logo-tile" style="--brand:#2496ED"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/></svg></span><span>Docker</span></div>
+            <div class="logo-tile" style="--brand:#2088FF"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.984 13.836a.5.5 0 0 1-.353-.146l-.745-.743a.5.5 0 1 1 .706-.708l.392.391 1.181-1.18a.5.5 0 0 1 .708.707l-1.535 1.533a.504.504 0 0 1-.354.146zm9.353-.147l1.534-1.532a.5.5 0 0 0-.707-.707l-1.181 1.18-.392-.391a.5.5 0 1 0-.706.708l.746.743a.497.497 0 0 0 .706-.001zM4.527 7.452l2.557-1.585A1 1 0 0 0 7.09 4.17L4.533 2.56A1 1 0 0 0 3 3.406v3.196a1.001 1.001 0 0 0 1.527.85zm2.03-2.436L4 6.602V3.406l2.557 1.61zM24 12.5c0 1.93-1.57 3.5-3.5 3.5a3.503 3.503 0 0 1-3.46-3h-2.08a3.503 3.503 0 0 1-3.46 3 3.502 3.502 0 0 1-3.46-3h-.558c-.972 0-1.85-.399-2.482-1.042V17c0 1.654 1.346 3 3 3h.04c.244-1.693 1.7-3 3.46-3 1.93 0 3.5 1.57 3.5 3.5S13.43 24 11.5 24a3.502 3.502 0 0 1-3.46-3H8c-2.206 0-4-1.794-4-4V9.899A5.008 5.008 0 0 1 0 5c0-2.757 2.243-5 5-5s5 2.243 5 5a5.005 5.005 0 0 1-4.952 4.998A2.482 2.482 0 0 0 7.482 12h.558c.244-1.693 1.7-3 3.46-3a3.502 3.502 0 0 1 3.46 3h2.08a3.503 3.503 0 0 1 3.46-3c1.93 0 3.5 1.57 3.5 3.5zm-15 8c0 1.378 1.122 2.5 2.5 2.5s2.5-1.122 2.5-2.5-1.122-2.5-2.5-2.5S9 19.122 9 20.5zM5 9c2.206 0 4-1.794 4-4S7.206 1 5 1 1 2.794 1 5s1.794 4 4 4zm9 3.5c0-1.378-1.122-2.5-2.5-2.5S9 11.122 9 12.5s1.122 2.5 2.5 2.5 2.5-1.122 2.5-2.5zm9 0c0-1.378-1.122-2.5-2.5-2.5S18 11.122 18 12.5s1.122 2.5 2.5 2.5 2.5-1.122 2.5-2.5zm-13 8a.5.5 0 1 0 1 0 .5.5 0 0 0-1 0zm2 0a.5.5 0 1 0 1 0 .5.5 0 0 0-1 0zm12 0c0 1.93-1.57 3.5-3.5 3.5a3.503 3.503 0 0 1-3.46-3.002c-.007.001-.013.005-.021.005l-.506.017h-.017a.5.5 0 0 1-.016-.999l.506-.017c.018-.002.035.006.052.007A3.503 3.503 0 0 1 20.5 17c1.93 0 3.5 1.57 3.5 3.5zm-1 0c0-1.378-1.122-2.5-2.5-2.5S18 19.122 18 20.5s1.122 2.5 2.5 2.5 2.5-1.122 2.5-2.5z"/></svg></span><span>GitHub Actions</span></div>
+            <div class="logo-tile" style="--brand:#2EA44F"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM2 3h20v4H2zM9 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Testcontainers</span></div>
+            <div class="logo-tile" style="--brand:#6BA539"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.039 0a2.959 2.959 0 00-2.65 4.274l-6.447 6.447a2.96 2.96 0 101.335 1.336l6.447-6.447A2.959 2.959 0 1021.04 0zM10.628 2.745c-.072 0-.143.003-.214.004-.072.002-.143.002-.215.005-.447.018-.893.064-1.335.138l-.03.005-.185.033-.105.02a7.718 7.718 0 00-.289.062l-.032.008a10.69 10.69 0 00-2.55.95l-.155.089c-.063.034-.125.07-.187.105-.046.027-.093.051-.14.079H5.19l-.01.005-.036.02v.002l.111.184 3.15 5.23a4.168 4.168 0 01.38-.202 4.294 4.294 0 011.628-.413c.071-.004.143-.008.214-.008zm.428.01v6.333c.325.034.647.103.96.209l4.66-4.66c-.173-.12-.348-.237-.528-.347l-.026-.015c-.056-.035-.112-.067-.168-.1l-.098-.056-.099-.055a12.735 12.735 0 00-.171-.092l-.027-.014a10.628 10.628 0 00-1.425-.617c-.69-.241-1.403-.41-2.128-.505l-.089-.012-.09-.01a6.56 6.56 0 00-.17-.019l-.049-.004-.204-.017a6.44 6.44 0 00-.255-.015c-.031-.003-.062-.003-.093-.004zM4.782 4.498a9.92 9.92 0 00-1.36 1.062l4.461 4.461.018.018c.049-.04.098-.078.149-.116l-.011-.018zm-1.67 1.36c-.05.05-.098.103-.147.154l-.149.155c-.33.357-.63.73-.902 1.118l-.039.056a10.588 10.588 0 00-.216.326 10.6 10.6 0 00-1.65 5.276l-.006.215-.003.214h6.317c0-.072.007-.143.01-.214.005-.072.006-.144.013-.215.081-.822.399-1.625.952-2.3.045-.055.096-.106.144-.16.048-.052.093-.107.144-.158zm16.255 1.464l-4.663 4.663c.106.312.175.634.21.959h6.332l-.004-.094a11.579 11.579 0 00-.032-.456l-.005-.052a13.044 13.044 0 00-.026-.241v-.009l-.033-.24v-.009a10.618 10.618 0 00-.327-1.493l-.003-.01a15.839 15.839 0 00-.07-.228l-.01-.03a14.111 14.111 0 00-.069-.204l-.02-.055a5.65 5.65 0 00-.153-.405 7.84 7.84 0 00-.093-.227 16.67 16.67 0 00-.063-.144l-.037-.081a13.776 13.776 0 00-.08-.171l-.024-.052-.096-.194-.014-.027a11.2 11.2 0 00-.112-.212l-.004-.008a10.615 10.615 0 00-.604-.98zm-4.43 6.05c0 .071-.006.142-.01.214-.003.072-.005.143-.012.214a4.29 4.29 0 01-.952 2.301c-.045.055-.096.107-.144.16-.048.053-.093.108-.144.159l4.467 4.467c.051-.051.099-.104.148-.155.05-.052.1-.103.148-.155.331-.358.633-.733.905-1.122l.032-.046.098-.144.085-.13.04-.063a10.597 10.597 0 001.647-5.272c.003-.071.004-.143.006-.214.001-.071.004-.143.004-.214zM.01 13.8l.004.093.01.179.005.076.017.206.005.046c.007.076.015.153.024.228l.003.022a9.605 9.605 0 00.033.248c.072.505.182 1.005.327 1.497l.002.006c.022.077.047.154.071.23l.004.014.005.014a15.737 15.737 0 00.153.439l.03.08.059.148a7.702 7.702 0 00.093.228l.062.14.038.084.078.169.027.054a10.677 10.677 0 00.225.441l.025.043 5.408-3.258.02-.012a4.314 4.314 0 01-.395-1.414h-.025zm.505 2.846l-.206.058.002.005zm6.425-1.052l-5.415 3.262c.083.139.17.273.259.406l.008.014.004.005.008.014h.001c.007.012.014.022.022.032l.001.002v.001a10.634 10.634 0 00.298.417l.006.008a9.963 9.963 0 00.29.368l.033.04c.043.052.086.103.13.153l.057.065.112.127.064.069.029.031.083.09.035.035c.049.051.098.103.149.153L7.58 16.42a3.86 3.86 0 01-.285-.321 4.422 4.422 0 01-.356-.505zm6.416 1.111c-.05.04-.1.079-.15.116l.011.018 3.257 5.407c.151-.099.3-.2.446-.307.315-.232.62-.484.914-.756l-4.46-4.46zm-5.457.003l-.015.015-4.46 4.46a8.966 8.966 0 00.195.176c.022.02.043.04.065.058l.152.13a10.622 10.622 0 00.215.174l.023.017.191.148.008.005c.268.2.547.389.834.564l.03.018.164.097.101.057a5.458 5.458 0 00.27.148c.008.004.016.01.025.013.162.085.327.164.493.24l.158-.385 2.243-5.448.009-.02a4.328 4.328 0 01-.701-.467zm4.951.353c-.061.037-.124.07-.187.104a4.318 4.318 0 01-3.271.336c-.069-.02-.135-.047-.203-.071-.067-.024-.136-.044-.202-.072l-2.242 5.444-.088.213-.075.183v.001l.017.007a.137.137 0 00.019.007l.005.003c.052.021.106.04.159.06.067.027.133.053.2.077l.102.04c.702.247 1.43.42 2.168.518l.087.012.09.01.172.019a7.173 7.173 0 00.252.022c.023.001.048.001.071.003l.184.011.112.005a7.06 7.06 0 00.358.007h.05a10.667 10.667 0 001.793-.15l.185-.034.105-.02.109-.023.18-.04.032-.008a10.684 10.684 0 002.55-.95c.052-.028.104-.06.156-.089.063-.034.125-.07.187-.105.043-.024.087-.047.13-.073h.001l.002-.002.002-.001.002-.001.007-.004.042-.025-.11-.183-.11-.184zm3.262 5.414l-.042.025.042-.024zm-.05.029zm-.005.004h-.002z"/></svg></span><span>OpenAPI</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap" aria-labelledby="roadmap-h">
+      <div class="sec-head">
+        <div>
+          <h2 id="roadmap-h">What we will add</h2>
+          <p>Upcoming features and platform improvements.</p>
+        </div>
+      </div>
+      <div class="roadmap">
+        <article class="glass rm">
+          <div class="rm-top"><h3>Products &amp; Inventory</h3><span class="badge next">Up next</span></div>
+          <p>Product catalog linked to classifications, stock levels per branch.</p>
+        </article>
+        <article class="glass rm">
+          <div class="rm-top"><h3>Sales &amp; POS</h3><span class="badge next">Up next</span></div>
+          <p>Point-of-sale transactions, receipts and refunds for every branch.</p>
+        </article>
+        <article class="glass rm">
+          <div class="rm-top"><h3>Orders</h3><span class="badge plan">Planned</span></div>
+          <p>Order creation, tracking and cancellation across the full lifecycle.</p>
+        </article>
+        <article class="glass rm">
+          <div class="rm-top"><h3>Branch-level access</h3><span class="badge plan">Planned</span></div>
+          <p>Branch admins managing their own users, roles and data independently.</p>
+        </article>
+        <article class="glass rm">
+          <div class="rm-top"><h3>Health monitoring</h3><span class="badge plan">Planned</span></div>
+          <p>Deep health checks for database, cache and storage with live status.</p>
+        </article>
+        <article class="glass rm">
+          <div class="rm-top"><h3>Zero-risk deployments</h3><span class="badge plan">Planned</span></div>
+          <p>Automated deploys with health-gated automatic rollback and rate limiting.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="start" aria-labelledby="start-h">
+      <div class="sec-head">
+        <div>
+          <h2 id="start-h">Get started</h2>
+          <p>Authenticate once, then call any protected endpoint.</p>
+        </div>
+      </div>
+      <div class="glass api">
+        <div class="api-row"><code><span class="method">POST</span>/api/v1/auth/login</code><span>Get an access &amp; refresh token</span></div>
+        <div class="api-row"><code><span class="method">POST</span>/api/v1/auth/refresh-token</code><span>Renew an expired access token</span></div>
+        <div class="api-row"><code>Authorization: Bearer &lt;token&gt;</code><span>Send with every protected request</span></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="glass dev" aria-label="Developer">
+    <div class="avatar" aria-hidden="true">MR</div>
+    <div>
+      <small>Designed &amp; developed by</small>
+      <b>Minhazur Rahman</b>
+      <span class="role">Software Engineer</span>
+    </div>
+  </aside>
+
+  <footer class="glass">
+    <span>&copy; <span id="year"></span> Familie Munshi. All rights reserved.</span>
+    <span>Status refreshes every 30 seconds</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var pill = document.getElementById('pill');
+    var pillText = document.getElementById('pill-text');
+    var card = document.getElementById('status');
+    var statusText = document.getElementById('status-text');
+    var latencyEl = document.getElementById('latency');
+    var checkedEl = document.getElementById('checked');
+    var uptimeEl = document.getElementById('uptime');
+    var started = Date.now();
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function setState(ok, ms) {
+      pill.className = 'pill ' + (ok ? 'ok' : 'err');
+      card.className = 'glass status ' + (ok ? 'ok' : 'err');
+      pillText.textContent = ok ? 'Operational' : 'Unreachable';
+      statusText.textContent = ok ? 'All systems operational' : 'Service unreachable';
+      latencyEl.textContent = ok && ms != null ? ms + ' ms' : '—';
+      checkedEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function check() {
+      var t0 = performance.now();
+      fetch('/', { cache: 'no-store' })
+        .then(function (res) { setState(res.ok, Math.round(performance.now() - t0)); })
+        .catch(function () { setState(false, null); });
+    }
+
+    function fmt(sec) {
+      var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+      return (h ? h + 'h ' : '') + (h || m ? m + 'm ' : '') + s + 's';
+    }
+
+    setInterval(function () {
+      uptimeEl.textContent = fmt(Math.floor((Date.now() - started) / 1000));
+    }, 1000);
+
+    check();
+    setInterval(check, 30000);
+  })();
+</script>
+</body>
+</html>

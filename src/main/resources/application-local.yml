@@ -30,3 +30,8 @@ logging:
   level:
     root: INFO
     com.familiemunshi: DEBUG
+
+# Local development: Swagger UI open without login
+docs:
+  auth:
+    enabled: false

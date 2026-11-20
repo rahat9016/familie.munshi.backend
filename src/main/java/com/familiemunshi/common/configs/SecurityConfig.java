@@ -54,7 +54,7 @@ public class SecurityConfig {
                 // =========== PUBLIC — infrastructure & API docs ===========
                 .authorizeHttpRequests(authorize -> authorize
                         // =========== PUBLIC — infrastructure & API docs ===========
-                        .requestMatchers(API_DOCS, SWAGGER_UI, "/api-docs-ui/**", "/ws/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
 
                         // =========== PUBLIC — landing / status page ===========
                         .requestMatchers(GET, "/", "/index.html", "/favicon.ico").permitAll()

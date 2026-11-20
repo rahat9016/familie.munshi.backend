@@ -4,7 +4,6 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Bean;
 import org.springdoc.core.models.GroupedOpenApi;
 
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.models.info.Info;
 import static com.familiemunshi.common.utils.Constants.*;
 
 @Configuration
-@Profile("local")
 public class LocalSwaggerConfig {
     @Bean
     public GroupedOpenApi publicApis() {

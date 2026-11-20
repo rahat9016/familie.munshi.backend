@@ -1,5 +1,6 @@
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
 
 spring:
   config:
@@ -36,9 +37,15 @@ storage:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: ${SPRINGDOC_ENABLED:false}
   swagger-ui:
-    enabled: false
+    enabled: ${SPRINGDOC_ENABLED:false}
+
+docs:
+  auth:
+    enabled: true
+  username: ${DOCS_USERNAME:}
+  password: ${DOCS_PASSWORD:}
 
 aws:
   s3:

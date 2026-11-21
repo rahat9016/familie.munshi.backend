@@ -132,7 +132,7 @@ public class BranchService {
             }
 
             // UPLOAD NEW IMAGE FIRST
-            String newFilename = fileStorageService.uploadPublicFile(newLogo, "branches");
+            String newFilename = fileStorageService.uploadPublicFile(newLogo, "branches/logos");
 
             // UPDATE DOMAIN WITH NEW OBJECT KEY
             updatedBranch = updatedBranch.withLogoUrl(newFilename);

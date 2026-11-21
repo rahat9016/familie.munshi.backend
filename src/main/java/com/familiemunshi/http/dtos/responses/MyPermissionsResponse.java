@@ -51,6 +51,19 @@ public record MyPermissionsResponse(
         );
     }
 
+    public static MyPermissionsResponse customer(UUID userId) {
+        return new MyPermissionsResponse(
+                userId,
+                null,
+                null,
+                null,
+                null,
+                List.of(),
+                List.of(),
+                null
+        );
+    }
+
     public static MyPermissionsResponse multipleBranches(
             UUID userId,
             List<BranchPermissionResponse> branches

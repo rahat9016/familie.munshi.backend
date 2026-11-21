@@ -161,6 +161,7 @@ public class PermissionController {
                     based on database role assignments.
                     Platform roles take priority over Branch roles.
                     No scope or branch ID is required.
+                    Users without any role (customers) receive empty roles and permissions.
                     """,
             responses = {
                     @ApiResponse(
@@ -170,10 +171,6 @@ public class PermissionController {
                     @ApiResponse(
                             responseCode = "401",
                             description = "Authentication required"
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "No active role assignment"
                     )
             }
     )

@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -126,7 +125,7 @@ public class PermissionService {
                 );
 
         if (branches.isEmpty()) {
-            throw new AccessDeniedException("No active role assignment found");
+            return MyPermissionsResponse.customer(userId);
         }
 
         List<BranchPermissionResponse> branchPermissions = branches.stream()

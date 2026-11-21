@@ -2,19 +2,28 @@ package com.familiemunshi.http.controllers;
 
 import com.familiemunshi.http.dtos.requests.CreateProductClassificationRequest;
 import com.familiemunshi.http.dtos.requests.UpdateProductClassificationRequest;
+import com.familiemunshi.http.dtos.responses.PaginatedResponse;
 import com.familiemunshi.http.dtos.responses.ProductClassificationResponse;
 import com.familiemunshi.http.dtos.responses.ProductClassificationTreeResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
+import com.familiemunshi.mapper.ProductClassificationMapper;
 import com.familiemunshi.service.ProductClassificationService;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
+import com.familiemunshi.service.filters.FindAllProductClassificationsFilter;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -78,24 +87,59 @@ public class ProductClassificationController {
     @GetMapping
     @Operation(
             summary = "Get all product classifications.",
+            description = "Search and filter product classifications by level and status with pagination.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Classifications retrieved."),
+                    @ApiResponse(responseCode = "400",
+                            description = "Invalid pagination or filter parameters."),
                     @ApiResponse(responseCode = "401",
-                            description = "Unauthenticated.")
+                            description = "Unauthenticated."),
+                    @ApiResponse(responseCode = "403",
+                            description = "PRODUCT_CLASSIFICATION_VIEW permission required.")
             }
     )
-    public ResponseEntity<SuccessResponse<Page<ProductClassificationResponse>>>
-    getClassifications(Pageable pageable) {
+    public ResponseEntity<PaginatedResponse<ProductClassificationResponse>>
+    getClassifications(
+            @Valid @ParameterObject
+            FindAllProductClassificationsFilter filter,
 
-        Page<ProductClassificationResponse> response =
-                productClassificationService.getAllProductClassifications(
+            @Parameter(description = "Page number starting from 1", example = "1")
+            @RequestParam(defaultValue = "1")
+            @Min(1)
+            int page,
+
+            @Parameter(description = "Records per page, maximum 100", example = "20")
+            @RequestParam(defaultValue = "20")
+            @Min(1)
+            @Max(100)
+            int size
+    ) {
+
+        Pageable pageable = PageRequest.of(
+                page - 1,
+                size,
+                Sort.by(
+                        Sort.Order.desc("createdAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        Page<ProductClassification> classifications =
+                productClassificationService.getAllProductClassificationsByFilter(
+                        filter,
                         pageable
                 );
 
+        List<ProductClassificationResponse> response = classifications.getContent()
+                .stream()
+                .map(ProductClassificationResponse::new)
+                .toList();
+
         return ResponseEntity.ok(
-                SuccessResponse.of(
+                PaginatedResponse.of(
                         "Product classifications retrieved successfully",
+                        classifications,
                         response
                 )
         );
@@ -114,7 +158,9 @@ public class ProductClassificationController {
     public ResponseEntity<SuccessResponse<List<ProductClassificationTreeResponse>>>
     getClassificationTree() {
         List<ProductClassificationTreeResponse> response =
-                productClassificationService.getProductClassificationTree();
+                ProductClassificationMapper.toTree(
+                        productClassificationService.getActiveClassifications()
+                );
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
@@ -141,7 +187,10 @@ public class ProductClassificationController {
     getRootClassifications() {
 
         List<ProductClassificationResponse> response =
-                productClassificationService.getRootClassifications();
+                productClassificationService.getRootClassifications()
+                        .stream()
+                        .map(ProductClassificationResponse::new)
+                        .toList();
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
@@ -172,7 +221,10 @@ public class ProductClassificationController {
     ) {
 
         List<ProductClassificationResponse> response =
-                productClassificationService.getChildClassifications(id);
+                productClassificationService.getChildClassifications(id)
+                        .stream()
+                        .map(ProductClassificationResponse::new)
+                        .toList();
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
@@ -203,7 +255,10 @@ public class ProductClassificationController {
     ) {
 
         List<ProductClassificationResponse> response =
-                productClassificationService.getClassificationsByLevel(level);
+                productClassificationService.getClassificationsByLevel(level)
+                        .stream()
+                        .map(ProductClassificationResponse::new)
+                        .toList();
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
@@ -216,7 +271,7 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
     )
-    @GetMapping("/{id}")
+    @GetMapping(ID)
     @Operation(
             summary = "Get product classification by ID.",
             responses = {
@@ -234,7 +289,9 @@ public class ProductClassificationController {
     ) {
 
         ProductClassificationResponse response =
-                productClassificationService.getProductClassificationById(id);
+                new ProductClassificationResponse(
+                        productClassificationService.getProductClassificationById(id)
+                );
 
         return ResponseEntity.ok(
                 SuccessResponse.of(

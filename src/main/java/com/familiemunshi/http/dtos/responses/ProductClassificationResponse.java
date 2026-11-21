@@ -14,6 +14,8 @@ public class ProductClassificationResponse {
     private String name;
     private ProductClassificationLevel level;
     private UUID parentId;
+    private String parentName;
+    private String icon;
     private boolean isActive;
 
     public ProductClassificationResponse(ProductClassification classification) {
@@ -22,6 +24,8 @@ public class ProductClassificationResponse {
         this.name = classification.name();
         this.level = classification.level();
         this.parentId = classification.parentId();
+        this.parentName = classification.parentName();
+        this.icon = classification.icon();
         this.isActive = classification.isActive();
     }
 }

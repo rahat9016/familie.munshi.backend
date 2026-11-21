@@ -9,10 +9,9 @@ import com.familiemunshi.mapper.ProductClassificationMapper;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 
-import com.familiemunshi.http.dtos.responses.ProductClassificationResponse;
-import com.familiemunshi.http.dtos.responses.ProductClassificationTreeResponse;
-
 import com.familiemunshi.service.exceptions.InvalidProductClassificationHierarchyException;
+import com.familiemunshi.service.filters.FindAllProductClassificationsFilter;
+import com.familiemunshi.common.utils.Util;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -49,6 +48,7 @@ public class ProductClassificationService {
                 ProductClassificationMapper.toDao(classification);
 
         classificationDao.setCode(code);
+        classificationDao.setIcon(normalizeIcon(classification.icon()));
         classificationDao.setParent(parent);
         classificationDao.setActive(true);
 
@@ -59,44 +59,57 @@ public class ProductClassificationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductClassificationResponse> getAllProductClassifications(
+    public Page<ProductClassification> getAllProductClassificationsByFilter(
+            FindAllProductClassificationsFilter filter,
             Pageable pageable
     ) {
-        return productClassificationRepository
-                .findAllByIsActiveTrue(pageable)
-                .map(ProductClassificationMapper::toEntity)
-                .map(ProductClassificationResponse::new);
-    }
 
-    @Transactional(readOnly = true)
-    public List<ProductClassificationTreeResponse> getProductClassificationTree() {
+        String searchPattern = Util.toSearchPattern(
+                filter.getSearch()
+        );
 
-        List<ProductClassification> classifications =
-                productClassificationRepository
-                        .findAllByIsActiveTrueOrderByNameAsc()
-                        .stream()
-                        .map(ProductClassificationMapper::toEntity)
-                        .toList();
+        boolean filterLevel = filter.getLevel() != null;
 
-        return ProductClassificationMapper.toTree(classifications);
-    }
+        boolean filterActive = filter.getIsActive() != null;
 
-    @Transactional(readOnly = true)
-    public List<ProductClassificationResponse> getRootClassifications() {
+        boolean activeValue = Boolean.TRUE.equals(
+                filter.getIsActive()
+        );
 
         return productClassificationRepository
-                .findAllByParentIsNullAndIsActiveTrueOrderByNameAsc()
-                .stream()
-                .map(classification ->
-                        new ProductClassificationResponse(
-                                ProductClassificationMapper.toEntity(classification)
-                        )
+                .findAllByFilters(
+                        searchPattern,
+                        filterLevel,
+                        filter.getLevel(),
+                        filterActive,
+                        activeValue,
+                        pageable
                 )
+                .map(ProductClassificationMapper::toEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductClassification> getActiveClassifications() {
+
+        return productClassificationRepository
+                .findAllByIsActiveTrueOrderByNameAsc()
+                .stream()
+                .map(ProductClassificationMapper::toEntity)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ProductClassificationResponse> getChildClassifications(
+    public List<ProductClassification> getRootClassifications() {
+
+        return productClassificationRepository
+                .findAllByParentIsNullAndIsActiveTrueOrderByNameAsc()
+                .stream()
+                .map(ProductClassificationMapper::toEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductClassification> getChildClassifications(
             UUID parentId
     ) {
 
@@ -105,16 +118,12 @@ public class ProductClassificationService {
         return productClassificationRepository
                 .findAllByParent_IdAndIsActiveTrueOrderByNameAsc(parentId)
                 .stream()
-                .map(classification ->
-                        new ProductClassificationResponse(
-                                ProductClassificationMapper.toEntity(classification)
-                        )
-                )
+                .map(ProductClassificationMapper::toEntity)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ProductClassificationResponse> getClassificationsByLevel(
+    public List<ProductClassification> getClassificationsByLevel(
             ProductClassificationLevel level
     ) {
 
@@ -123,25 +132,16 @@ public class ProductClassificationService {
         return productClassificationRepository
                 .findAllByLevelAndIsActiveTrueOrderByNameAsc(level)
                 .stream()
-                .map(classification ->
-                        new ProductClassificationResponse(
-                                ProductClassificationMapper.toEntity(classification)
-                        )
-                )
+                .map(ProductClassificationMapper::toEntity)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ProductClassificationResponse getProductClassificationById(
+    public ProductClassification getProductClassificationById(
             UUID id
     ) {
 
-        ProductClassificationDao classification =
-                getActiveClassification(id);
-
-        return new ProductClassificationResponse(
-                ProductClassificationMapper.toEntity(classification)
-        );
+        return getActiveClassification(id);
     }
 
     public ProductClassification updateProductClassification(
@@ -150,7 +150,7 @@ public class ProductClassificationService {
     ) {
 
         ProductClassificationDao existingClassification =
-                getActiveClassification(id);
+                findActiveClassificationDao(id);
 
         String updatedName = classification.name() != null
                 ? classification.name().trim()
@@ -190,6 +190,11 @@ public class ProductClassificationService {
         existingClassification.setLevel(updatedLevel);
         existingClassification.setParent(updatedParent);
 
+        // null = keep current icon, blank = remove icon.
+        if (classification.icon() != null) {
+            existingClassification.setIcon(normalizeIcon(classification.icon()));
+        }
+
         ProductClassificationDao updatedClassification =
                 productClassificationRepository.save(existingClassification);
 
@@ -200,7 +205,7 @@ public class ProductClassificationService {
     public void deleteProductClassification(UUID id) {
 
         ProductClassificationDao classification =
-                getActiveClassification(id);
+                findActiveClassificationDao(id);
 
         boolean hasActiveChildren =
                 productClassificationRepository
@@ -217,7 +222,18 @@ public class ProductClassificationService {
         productClassificationRepository.save(classification);
     }
 
-    private ProductClassificationDao getActiveClassification(UUID id) {
+    private ProductClassification getActiveClassification(UUID id) {
+
+        return ProductClassificationMapper.toEntity(
+                findActiveClassificationDao(id)
+        );
+    }
+
+    /*
+     * Write paths (update, delete, parent assignment) need the managed
+     * JPA object so changes are persisted; read paths use the entity.
+     */
+    private ProductClassificationDao findActiveClassificationDao(UUID id) {
 
         return productClassificationRepository
                 .findByIdAndIsActiveTrue(id)
@@ -257,7 +273,7 @@ public class ProductClassificationService {
         }
 
         ProductClassificationDao parent =
-                getActiveClassification(parentId);
+                findActiveClassificationDao(parentId);
 
         if (parent.getLevel() != requiredParentLevel) {
             throw new BadRequestException(
@@ -396,6 +412,15 @@ public class ProductClassificationService {
                     "Product classification name cannot exceed 150 characters."
             );
         }
+    }
+
+    private String normalizeIcon(String icon) {
+
+        if (icon == null || icon.isBlank()) {
+            return null;
+        }
+
+        return icon.trim();
     }
 
     private void validateLevel(ProductClassificationLevel level) {

@@ -6,6 +6,7 @@ import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.UUID;
@@ -40,11 +41,20 @@ public class CreateProductClassificationRequest {
     )
     UUID parentId;
 
+    @Schema(
+            description = "Icon name or URL for the product classification",
+            example = "shirt",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    @Size(max = 100)
+    String icon;
+
     public ProductClassification toEntity() {
         return ProductClassification.builder()
                 .name(this.name)
                 .level(this.level)
                 .parentId(this.parentId)
+                .icon(this.icon)
                 .build();
     }
 }

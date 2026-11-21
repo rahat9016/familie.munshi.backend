@@ -24,6 +24,10 @@ public class ProductClassificationMapper {
                 .parentId(dao.getParent() != null
                         ? dao.getParent().getId()
                         : null)
+                .parentName(dao.getParent() != null
+                        ? dao.getParent().getName()
+                        : null)
+                .icon(dao.getIcon())
                 .isActive(dao.isActive())
                 .build();
     }
@@ -41,6 +45,7 @@ public class ProductClassificationMapper {
                         .id(domain.parentId())
                         .build()
                         : null)
+                .icon(domain.icon())
                 .isActive(domain.isActive())
                 .build();
     }

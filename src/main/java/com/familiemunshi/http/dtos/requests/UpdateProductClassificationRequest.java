@@ -40,11 +40,20 @@ public class UpdateProductClassificationRequest
     )
     UUID parentId;
 
+    @Schema(
+            description = "Icon name or URL. Omit to keep current icon, send empty string to remove it",
+            example = "shirt",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    @Size(max = 100)
+    String icon;
+
     public ProductClassification toEntity() {
         return ProductClassification.builder()
                 .name(this.name)
                 .level(this.level)
                 .parentId(this.parentId)
+                .icon(this.icon)
                 .build();
     }
 }

@@ -36,6 +36,7 @@ public class Constants {
 
     public static final String PRODUCT_CLASSIFICATIONS = "/product-classifications";
     public static final String PRODUCT_CLASSIFICATION_TREE = "/tree";
+    public static final String PRODUCT_CLASSIFICATION_GROUP_ID = "/{groupId}";
     public static final String PRODUCT_CLASSIFICATION_ROOTS = "/roots";
     public static final String PRODUCT_CLASSIFICATION_CHILDREN = "/children";
     public static final String PRODUCT_CLASSIFICATION_BY_LEVEL = "/by-level";

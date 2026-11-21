@@ -64,8 +64,6 @@ public interface ProductClassificationRepository
             Pageable pageable
     );
 
-    List<ProductClassificationDao> findAllByIsActiveTrueOrderByNameAsc();
-
     List<ProductClassificationDao>
     findAllByParent_IdAndIsActiveTrueOrderByNameAsc(UUID parentId);
 
@@ -85,4 +83,33 @@ public interface ProductClassificationRepository
     );
 
     boolean existsByParent_IdAndIsActiveTrue(UUID parentId);
+
+    /*
+     * The given classification and all of its active descendants.
+     * An inactive row stops the walk, so its whole branch is excluded.
+     */
+    @Query(
+            value = """
+                    WITH RECURSIVE subtree AS (
+                        SELECT *
+                        FROM product_classifications
+                        WHERE id = :rootId
+                          AND is_active = true
+
+                        UNION ALL
+
+                        SELECT c.*
+                        FROM product_classifications c
+                        JOIN subtree s ON c.parent_id = s.id
+                        WHERE c.is_active = true
+                    )
+                    SELECT *
+                    FROM subtree
+                    ORDER BY name
+                    """,
+            nativeQuery = true
+    )
+    List<ProductClassificationDao> findActiveSubtree(
+            @Param("rootId") UUID rootId
+    );
 }

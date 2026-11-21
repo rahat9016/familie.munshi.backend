@@ -145,27 +145,35 @@ public class ProductClassificationController {
         );
     }
 
-    @GetMapping(PRODUCT_CLASSIFICATION_TREE)
+    @GetMapping(PRODUCT_CLASSIFICATION_TREE + PRODUCT_CLASSIFICATION_GROUP_ID)
     @Operation(
-            summary = "Get product classifications in tree structure.",
+            summary = "Get one group's classification tree.",
+            description = "Returns the group with all of its active descendants. "
+                    + "Other groups are not included.",
             responses = {
                     @ApiResponse(responseCode = "200",
-                            description = "Classification tree retrieved."),
+                            description = "Group tree retrieved."),
+                    @ApiResponse(responseCode = "400",
+                            description = "Classification is not a GROUP."),
+                    @ApiResponse(responseCode = "404",
+                            description = "Group not found or inactive."),
                     @ApiResponse(responseCode = "401",
                             description = "Unauthenticated.")
             }
     )
-    public ResponseEntity<SuccessResponse<List<ProductClassificationTreeResponse>>>
-    getClassificationTree() {
-        List<ProductClassificationTreeResponse> response =
+    public ResponseEntity<SuccessResponse<ProductClassificationTreeResponse>>
+    getGroupTree(
+            @PathVariable UUID groupId
+    ) {
+        List<ProductClassificationTreeResponse> roots =
                 ProductClassificationMapper.toTree(
-                        productClassificationService.getActiveClassifications()
+                        productClassificationService.getActiveClassificationsByGroup(groupId)
                 );
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
                         "Product classification tree retrieved successfully",
-                        response
+                        roots.getFirst()
                 )
         );
     }

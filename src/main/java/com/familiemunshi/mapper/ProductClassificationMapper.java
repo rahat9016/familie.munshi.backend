@@ -64,9 +64,8 @@ public class ProductClassificationMapper {
                     item.id(),
                     new ProductClassificationTreeResponse(
                             item.id(),
-                            item.code(),
                             item.name(),
-                            item.level(),
+                            item.icon(),
                             new ArrayList<>()
                     )
             );

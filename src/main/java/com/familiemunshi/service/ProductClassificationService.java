@@ -91,11 +91,25 @@ public class ProductClassificationService {
                 .map(ProductClassificationMapper::toEntity);
     }
 
+    /*
+     * The group and every active classification under it.
+     * Other groups are not loaded.
+     */
     @Transactional(readOnly = true)
-    public List<ProductClassification> getActiveClassifications() {
+    public List<ProductClassification> getActiveClassificationsByGroup(
+            UUID groupId
+    ) {
+
+        ProductClassification group = getActiveClassification(groupId);
+
+        if (group.level() != ProductClassificationLevel.GROUP) {
+            throw new BadRequestException(
+                    "Product classification " + groupId + " is not a GROUP."
+            );
+        }
 
         return productClassificationRepository
-                .findAllByIsActiveTrueOrderByNameAsc()
+                .findActiveSubtree(groupId)
                 .stream()
                 .map(ProductClassificationMapper::toEntity)
                 .toList();

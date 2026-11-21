@@ -20,7 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -251,10 +254,10 @@ public class ProductClassificationService {
             UUID parentId
     ) {
 
-        ProductClassificationLevel requiredParentLevel =
-                getRequiredParentLevel(level);
+        Set<ProductClassificationLevel> allowedParentLevels =
+                getAllowedParentLevels(level);
 
-        if (requiredParentLevel == null) {
+        if (allowedParentLevels.isEmpty()) {
 
             if (parentId != null) {
                 throw new BadRequestException(
@@ -268,17 +271,17 @@ public class ProductClassificationService {
         if (parentId == null) {
             throw new BadRequestException(
                     level + " classification requires a parent of level "
-                            + requiredParentLevel + "."
+                            + describeLevels(allowedParentLevels) + "."
             );
         }
 
         ProductClassificationDao parent =
                 findActiveClassificationDao(parentId);
 
-        if (parent.getLevel() != requiredParentLevel) {
+        if (!allowedParentLevels.contains(parent.getLevel())) {
             throw new BadRequestException(
                     level + " classification must have a parent with level "
-                            + requiredParentLevel + "."
+                            + describeLevels(allowedParentLevels) + "."
             );
         }
 
@@ -286,32 +289,46 @@ public class ProductClassificationService {
     }
 
     /*
-     * Return the required parent level for a classification level.
+     * Allowed parent levels for a classification level.
+     * SEGMENT is optional: SUB_CATEGORY may sit directly under CATEGORY.
      */
-    private ProductClassificationLevel getRequiredParentLevel(
+    private Set<ProductClassificationLevel> getAllowedParentLevels(
             ProductClassificationLevel level
     ) {
 
         return switch (level) {
-            case GROUP -> null;
-            case PARENT_CATEGORY -> ProductClassificationLevel.GROUP;
-            case CATEGORY -> ProductClassificationLevel.PARENT_CATEGORY;
-            case SEGMENT -> ProductClassificationLevel.CATEGORY;
-            case SUB_CATEGORY -> ProductClassificationLevel.SEGMENT;
+            case GROUP -> EnumSet.noneOf(ProductClassificationLevel.class);
+            case PARENT_CATEGORY -> EnumSet.of(ProductClassificationLevel.GROUP);
+            case CATEGORY -> EnumSet.of(ProductClassificationLevel.PARENT_CATEGORY);
+            case SEGMENT -> EnumSet.of(ProductClassificationLevel.CATEGORY);
+            case SUB_CATEGORY -> EnumSet.of(
+                    ProductClassificationLevel.CATEGORY,
+                    ProductClassificationLevel.SEGMENT
+            );
         };
     }
 
-    private ProductClassificationLevel getExpectedChildLevel(
+    private Set<ProductClassificationLevel> getAllowedChildLevels(
             ProductClassificationLevel level
     ) {
 
         return switch (level) {
-            case GROUP -> ProductClassificationLevel.PARENT_CATEGORY;
-            case PARENT_CATEGORY -> ProductClassificationLevel.CATEGORY;
-            case CATEGORY -> ProductClassificationLevel.SEGMENT;
-            case SEGMENT -> ProductClassificationLevel.SUB_CATEGORY;
-            case SUB_CATEGORY -> null;
+            case GROUP -> EnumSet.of(ProductClassificationLevel.PARENT_CATEGORY);
+            case PARENT_CATEGORY -> EnumSet.of(ProductClassificationLevel.CATEGORY);
+            case CATEGORY -> EnumSet.of(
+                    ProductClassificationLevel.SEGMENT,
+                    ProductClassificationLevel.SUB_CATEGORY
+            );
+            case SEGMENT -> EnumSet.of(ProductClassificationLevel.SUB_CATEGORY);
+            case SUB_CATEGORY -> EnumSet.noneOf(ProductClassificationLevel.class);
         };
+    }
+
+    private String describeLevels(Set<ProductClassificationLevel> levels) {
+
+        return levels.stream()
+                .map(Enum::name)
+                .collect(Collectors.joining(" or "));
     }
 
     private void validateExistingChildren(
@@ -329,17 +346,17 @@ public class ProductClassificationService {
             return;
         }
 
-        ProductClassificationLevel expectedChildLevel =
-                getExpectedChildLevel(newLevel);
+        Set<ProductClassificationLevel> allowedChildLevels =
+                getAllowedChildLevels(newLevel);
 
-        if (expectedChildLevel == null) {
+        if (allowedChildLevels.isEmpty()) {
             throw new InvalidProductClassificationHierarchyException(
                     "Cannot change classification level because it has active child classifications."
             );
         }
 
         boolean hasInvalidChild = children.stream()
-                .anyMatch(child -> child.getLevel() != expectedChildLevel);
+                .anyMatch(child -> !allowedChildLevels.contains(child.getLevel()));
 
         if (hasInvalidChild) {
             throw new InvalidProductClassificationHierarchyException(

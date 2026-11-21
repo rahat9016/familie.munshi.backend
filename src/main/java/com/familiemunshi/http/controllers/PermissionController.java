@@ -152,6 +152,7 @@ public class PermissionController {
     }
 
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     @Operation(
             summary = "Get my effective permissions",

@@ -102,37 +102,4 @@ public enum PermissionCode {
     public static boolean isSuppoerted(String code) {
         return code != null && Stream.of(PermissionCode.values()).anyMatch(permission -> permission.getCode().equalsIgnoreCase(code));
     }
-
-
-    public static List<String> getDefaultBranchPermissions() {
-
-        return List.of(
-                // BRANCH MANAGEMENT
-                BRANCH_READ.getCode(), BRANCH_UPDATE.getCode(),
-
-                // USER MANAGEMENT
-                USER_CREATE.getCode(), USER_READ.getCode(), USER_UPDATE.getCode(), USER_ROLE_MANAGE.getCode(),
-
-                // ROLE MANAGEMENT
-                ROLE_CREATE.getCode(), ROLE_READ.getCode(), ROLE_UPDATE.getCode(), ROLE_PERMISSION_MANAGE.getCode(), PERMISSION_READ.getCode(),
-
-                // PRODUCT MANAGEMENT
-                PRODUCT_CREATE.getCode(), PRODUCT_READ.getCode(), PRODUCT_UPDATE.getCode(), PRODUCT_DELETE.getCode(),
-
-                // SALES MANAGEMENT
-                SALE_CREATE.getCode(), SALE_READ.getCode(), SALE_UPDATE.getCode(),
-
-                // ORDER MANAGEMENT
-                ORDER_CREATE.getCode(), ORDER_READ.getCode(), ORDER_UPDATE.getCode(), ORDER_CANCEL.getCode());
-    }
-
-    public static List<String> getPlatformPermissions() {
-        return List.of(BRANCH_CREATE.getCode(), BRANCH_READ.getCode(), BRANCH_UPDATE.getCode(), BRANCH_DELETE.getCode(), BRANCH_LIST.getCode(),
-
-                ROLE_CREATE.getCode(), ROLE_READ.getCode(), ROLE_UPDATE.getCode(), ROLE_DELETE.getCode(),
-
-                PERMISSION_READ.getCode(), ROLE_PERMISSION_MANAGE.getCode(),
-
-                USER_CREATE.getCode(), USER_READ.getCode(), USER_UPDATE.getCode(), USER_DELETE.getCode(), USER_ROLE_MANAGE.getCode());
-    }
 }

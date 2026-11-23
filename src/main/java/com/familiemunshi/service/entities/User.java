@@ -16,6 +16,7 @@ public record User(
         String firstName,
         String lastName,
         String email,
+        String phone,
         String password,
         boolean isActive,
         Instant createdAt,

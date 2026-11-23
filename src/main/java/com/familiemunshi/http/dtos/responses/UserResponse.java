@@ -13,6 +13,7 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String email;
+    private String phone;
     private boolean isActive;
 
     public UserResponse(User user){
@@ -20,6 +21,7 @@ public class UserResponse {
         this.firstName = user.firstName();
         this.lastName = user.lastName();
         this.email = user.email();
+        this.phone = user.phone();
         this.isActive = user.isActive();
     }
 }

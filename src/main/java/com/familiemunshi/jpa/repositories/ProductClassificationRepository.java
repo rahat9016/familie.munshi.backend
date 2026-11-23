@@ -82,7 +82,7 @@ public interface ProductClassificationRepository
             UUID id
     );
 
-    boolean existsByParent_IdAndIsActiveTrue(UUID parentId);
+    boolean existsByParent_Id(UUID parentId);
 
     /*
      * The given classification and all of its active descendants.

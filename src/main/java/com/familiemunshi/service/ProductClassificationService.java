@@ -222,21 +222,24 @@ public class ProductClassificationService {
     public void deleteProductClassification(UUID id) {
 
         ProductClassificationDao classification =
-                findActiveClassificationDao(id);
-
-        boolean hasActiveChildren =
                 productClassificationRepository
-                        .existsByParent_IdAndIsActiveTrue(id);
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Product classification",
+                                        "id",
+                                        id
+                                )
+                        );
 
-        if (hasActiveChildren) {
+        if (productClassificationRepository.existsByParent_Id(id)) {
             throw new InvalidProductClassificationHierarchyException(
-                    "Cannot delete product classification because it has active child classifications."
+                    "Cannot delete product classification because it has child classifications. "
+                            + "Delete its children first."
             );
         }
 
-        classification.setActive(false);
-
-        productClassificationRepository.save(classification);
+        productClassificationRepository.delete(classification);
     }
 
     private ProductClassification getActiveClassification(UUID id) {

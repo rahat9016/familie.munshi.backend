@@ -354,7 +354,7 @@ public class ProductClassificationController {
                     @ApiResponse(responseCode = "404",
                             description = "Classification not found."),
                     @ApiResponse(responseCode = "409",
-                            description = "Classification has active children."),
+                            description = "Classification has child classifications."),
                     @ApiResponse(responseCode = "401",
                             description = "Unauthenticated.")
             }

@@ -2,6 +2,7 @@ package com.familiemunshi.jpa.repositories;
 
 import com.familiemunshi.jpa.daos.UserDao;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,7 @@ public interface UserRepository extends JpaRepository<UserDao, UUID> {
             String email,
             String password
     );
-    Optional<UserDao> findByIdAndIsActiveTrue(UUID id);
+    @NonNull Optional<UserDao> findById(@NonNull UUID id);
     boolean existsByIdAndIsActiveTrue(UUID id);
 
     @Query("""

@@ -216,7 +216,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getUser(UUID id){
         UserDao user = userRepository
-                .findByIdAndIsActiveTrue(id)
+                .findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id.toString()));
         return UserMapper.toEntity(user);
     }

@@ -72,7 +72,9 @@ public class SecurityConfig {
                         .authenticated()
 
                         // =========== PUBLIC — role management ===========
-                        .requestMatchers(GET, API_BASE + SYSTEM + ROLES, API_BASE + SYSTEM + ROLES + "/**").authenticated().requestMatchers(POST, API_BASE + SYSTEM + ROLES).authenticated()
+                        .requestMatchers(GET, API_BASE + SYSTEM + ROLES, API_BASE + SYSTEM + ROLES + "/**")
+                        .authenticated().requestMatchers(POST, API_BASE + SYSTEM + ROLES)
+                        .authenticated()
                         .requestMatchers( POST,API_BASE + SYSTEM + ROLES + "/*" + PERMISSIONS)
                         .authenticated()
 
@@ -92,8 +94,11 @@ public class SecurityConfig {
                         .requestMatchers(GET, API_BASE  + PERMISSIONS, API_BASE + PERMISSIONS + "/**").authenticated()
 
                         // =========== PRODUCT CLASSIFICATION ===========
-                        .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_TREE).permitAll()
-                        .requestMatchers(GET, API_BASE + PRODUCT_CLASSIFICATIONS, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
+
+                        .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_ROOTS).permitAll()
+                        .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_TREE + "/**").permitAll()
+                        .requestMatchers(GET, API_BASE + PRODUCT_CLASSIFICATIONS, API_BASE + PRODUCT_CLASSIFICATIONS + "/**")
+                        .authenticated()
                         .requestMatchers(POST, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
                         .requestMatchers(PATCH, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
                         .requestMatchers(DELETE, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()

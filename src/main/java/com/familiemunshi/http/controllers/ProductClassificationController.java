@@ -157,8 +157,6 @@ public class ProductClassificationController {
                             description = "Classification is not a GROUP."),
                     @ApiResponse(responseCode = "404",
                             description = "Group not found or inactive."),
-                    @ApiResponse(responseCode = "401",
-                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<ProductClassificationTreeResponse>>
@@ -178,9 +176,6 @@ public class ProductClassificationController {
         );
     }
 
-    @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
-    )
     @GetMapping(PRODUCT_CLASSIFICATION_ROOTS)
     @Operation(
             summary = "Get root product classifications.",

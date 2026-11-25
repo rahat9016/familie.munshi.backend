@@ -22,6 +22,8 @@ public enum PermissionCode {
 
     // PERMISSION MANAGEMENT
     PERMISSION_READ("PERMISSION_READ", "PERMISSION", "View permissions"),
+    PERMISSION_LIST("PERMISSION_LIST", "PERMISSION", "List permissions"),
+    PERMISSION_LIST_TREE("PERMISSION_LIST_TREE", "PERMISSION", "View permissions in tree format"),
     ROLE_PERMISSION_MANAGE("ROLE_PERMISSION_MANAGE", "PERMISSION", "Manage role permissions"),
 
     // USER MANAGEMENT

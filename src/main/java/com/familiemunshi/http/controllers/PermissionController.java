@@ -34,10 +34,9 @@ import static com.familiemunshi.common.utils.Constants.*;
 public class PermissionController {
     private final PermissionService permissionService;
 
-
     @GetMapping
     @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'PERMISSION_READ')"
+            "@permissionAuthorizationService.hasPermission(authentication, 'PERMISSION_LIST')"
     )
     @Operation(
             summary = "Get all permissions",
@@ -57,7 +56,7 @@ public class PermissionController {
                     ),
                     @ApiResponse(
                             responseCode = "403",
-                            description = "PERMISSION_READ permission required"
+                            description = "PERMISSION_LIST permission required"
                     )
             }
     )
@@ -107,7 +106,7 @@ public class PermissionController {
 
 
     @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'PERMISSION_READ')"
+            "@permissionAuthorizationService.hasPermission(authentication, 'PERMISSION_LIST_TREE')"
     )
     @GetMapping("/tree")
     public ResponseEntity<SuccessResponse<List<ModulePermissionTreeResponse>>>
@@ -132,6 +131,7 @@ public class PermissionController {
                 )
         );
     }
+
 
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PERMISSION_READ')"

@@ -33,6 +33,8 @@ public final class PermissionPolicy {
                     PermissionCode.ROLE_DELETE,
 
                     PermissionCode.PERMISSION_READ,
+                    PermissionCode.PERMISSION_LIST,
+                    PermissionCode.PERMISSION_LIST_TREE,
                     PermissionCode.ROLE_PERMISSION_MANAGE,
 
                     PermissionCode.PRODUCT_CLASSIFICATION_CREATE,

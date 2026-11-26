@@ -14,6 +14,7 @@ public class UserResponse {
     private String lastName;
     private String email;
     private String phone;
+    private String profilePicture;
     private boolean isActive;
 
     public UserResponse(User user){
@@ -23,5 +24,10 @@ public class UserResponse {
         this.email = user.email();
         this.phone = user.phone();
         this.isActive = user.isActive();
+    }
+
+    public UserResponse(User user, String profilePictureUrl){
+        this(user);
+        this.profilePicture = profilePictureUrl;
     }
 }

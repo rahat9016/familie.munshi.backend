@@ -42,6 +42,12 @@ public final class PermissionPolicy {
                     PermissionCode.PRODUCT_CLASSIFICATION_UPDATE,
                     PermissionCode.PRODUCT_CLASSIFICATION_DELETE,
 
+                    PermissionCode.BRAND_CREATE,
+                    PermissionCode.BRAND_VIEW,
+                    PermissionCode.BRAND_LIST_VIEW,
+                    PermissionCode.BRAND_UPDATE,
+                    PermissionCode.BRAND_DELETE,
+
                     PermissionCode.USER_CREATE,
                     PermissionCode.USER_READ,
                     PermissionCode.USER_UPDATE,

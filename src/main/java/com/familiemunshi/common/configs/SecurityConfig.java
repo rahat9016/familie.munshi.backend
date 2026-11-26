@@ -104,6 +104,10 @@ public class SecurityConfig {
                         .requestMatchers(PATCH, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
                         .requestMatchers(DELETE, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()
 
+                        // =========== BRANDS ===========
+                        .requestMatchers(GET, API_BASE + BRANDS + PUBLIC).permitAll()
+                        .requestMatchers(API_BASE + BRANDS, API_BASE + BRANDS + "/**").authenticated()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)
                         .authenticated().requestMatchers(GET, API_BASE + BRANCHES + "/**")

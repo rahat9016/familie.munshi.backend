@@ -45,6 +45,13 @@ public enum PermissionCode {
     PRODUCT_CLASSIFICATION_UPDATE("PRODUCT_CLASSIFICATION_UPDATE", "PRODUCT_CLASSIFICATION", "Update product classifications"),
     PRODUCT_CLASSIFICATION_DELETE("PRODUCT_CLASSIFICATION_DELETE", "PRODUCT_CLASSIFICATION", "Delete product classifications"),
 
+    // BRAND MANAGEMENT
+    BRAND_CREATE("BRAND_CREATE", "BRAND", "Create brands"),
+    BRAND_VIEW("BRAND_VIEW", "BRAND", "View a brand"),
+    BRAND_LIST_VIEW("BRAND_LIST_VIEW", "BRAND", "List brands"),
+    BRAND_UPDATE("BRAND_UPDATE", "BRAND", "Update brands"),
+    BRAND_DELETE("BRAND_DELETE", "BRAND", "Delete brands"),
+
     // PRODUCT MANAGEMENT
     PRODUCT_CREATE("PRODUCT_CREATE", "PRODUCT", "Create products"),
     PRODUCT_READ("PRODUCT_READ", "PRODUCT", "View products"),

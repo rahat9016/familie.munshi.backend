@@ -1,6 +1,7 @@
 package com.familiemunshi.http.controllers;
 
 import com.familiemunshi.http.dtos.requests.CreateUserRequest;
+import com.familiemunshi.http.dtos.requests.UpdateMyProfileRequest;
 import com.familiemunshi.http.dtos.responses.PaginatedResponse;
 import com.familiemunshi.http.dtos.responses.SuccessResponse;
 import com.familiemunshi.http.dtos.responses.UserPlatformRoleResponse;
@@ -101,7 +102,29 @@ public class UserController {
     public ResponseEntity<SuccessResponse<UserResponse>> getMyProfile(Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
         User user = userService.getUser(userId);
-        return ResponseEntity.ok(SuccessResponse.of("User profile retrieved successfully", new UserResponse(user)));
+        return ResponseEntity.ok(SuccessResponse.of(
+                "User profile retrieved successfully",
+                new UserResponse(user, userService.getProfilePictureUrl(user))));
+    }
+
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update my profile.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Profile updated successfully."),
+                    @ApiResponse(responseCode = "400", description = "Invalid input."),
+                    @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+            })
+    public ResponseEntity<SuccessResponse<UserResponse>> updateMyProfile(
+            @Valid @ModelAttribute UpdateMyProfileRequest request,
+            Authentication authentication) {
+
+        UUID userId = UUID.fromString(authentication.getName());
+        User updated = userService.updateMyProfile(userId, request);
+
+        return ResponseEntity.ok(SuccessResponse.of(
+                "Profile updated successfully",
+                new UserResponse(updated, userService.getProfilePictureUrl(updated))));
     }
 
 

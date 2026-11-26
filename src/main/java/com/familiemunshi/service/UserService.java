@@ -1,8 +1,10 @@
 package com.familiemunshi.service;
 
 
+import com.familiemunshi.common.component.StorageFileSupport;
 import com.familiemunshi.common.service.FileStorageService;
 import com.familiemunshi.common.utils.Util;
+import com.familiemunshi.http.dtos.requests.UpdateMyProfileRequest;
 import com.familiemunshi.http.validations.ValidationUtil;
 import com.familiemunshi.jpa.daos.*;
 import com.familiemunshi.jpa.repositories.*;
@@ -13,7 +15,9 @@ import com.familiemunshi.service.exceptions.*;
 import com.familiemunshi.service.filters.FindAllUsersFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -211,6 +215,55 @@ public class UserService {
         return UserMapper.toEntity(savedUser);
     }
 
+    private static final int PROFILE_PICTURE_URL_EXPIRY_MINUTES = 7 * 24 * 60;
+
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "'active:' + #userId"),
+            @CacheEvict(value = "users", key = "'all:' + #userId")
+    })
+    @Transactional
+    public User updateMyProfile(UUID userId, UpdateMyProfileRequest request) {
+
+        UserDao userDao = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
+            userDao.setFirstName(request.getFirstName().trim());
+        }
+        if (request.getLastName() != null && !request.getLastName().isBlank()) {
+            userDao.setLastName(request.getLastName().trim());
+        }
+        if (request.getPhone() != null) {
+            userDao.setPhone(request.getPhone().isBlank() ? null : request.getPhone().trim());
+        }
+
+        MultipartFile newPicture = request.getProfilePicture();
+        if (newPicture != null && !newPicture.isEmpty()) {
+            ValidationUtil.validateMediaType(newPicture);
+            requireActiveTransaction();
+
+            String previousPicture = userDao.getProfilePicture();
+            String newFilename = fileStorageService.uploadPublicFile(
+                    newPicture,
+                    StorageFileSupport.USER_PROFILE_PICTURES
+            );
+            userDao.setProfilePicture(newFilename);
+            registerPictureReplacementCleanup(previousPicture, newFilename);
+        }
+
+        return UserMapper.toEntity(userRepository.saveAndFlush(userDao));
+    }
+
+    public String getProfilePictureUrl(User user) {
+        if (user.profilePicture() == null || user.profilePicture().isBlank()) {
+            return null;
+        }
+        return fileStorageService.getPresignedUrl(
+                user.profilePicture(),
+                PROFILE_PICTURE_URL_EXPIRY_MINUTES
+        );
+    }
+
     // This method is used to get a user by ID, but it only returns the user if they are active.
     @Cacheable(value = "users", key = "'active:' + #id")
     @Transactional(readOnly = true)
@@ -282,6 +335,40 @@ public class UserService {
                     "You cannot assign a role beyond your own permissions"
             );
         }
+    }
+
+    private void requireActiveTransaction() {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || !TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new IllegalStateException("Active transaction required");
+        }
+    }
+
+    private void registerPictureReplacementCleanup(String previousPicture, String newFilename) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                if (previousPicture == null || previousPicture.isBlank() || previousPicture.equals(newFilename)) {
+                    return;
+                }
+                try {
+                    fileStorageService.deleteFile(previousPicture);
+                } catch (Exception exception) {
+                    log.error("Failed to delete previous profile picture: {}", previousPicture, exception);
+                }
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    try {
+                        fileStorageService.deleteFile(newFilename);
+                    } catch (Exception exception) {
+                        log.error("Failed to clean up uploaded profile picture: {}", newFilename, exception);
+                    }
+                }
+            }
+        });
     }
 
     private void registerUploadedFileCleanup(String filename) {

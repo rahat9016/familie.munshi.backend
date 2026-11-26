@@ -23,6 +23,12 @@ import java.util.UUID;
                         name = "idx_product_classifications_active",
                         columnList = "is_active"
                 )
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_product_classifications_level_sort_order",
+                        columnNames = {"level", "sort_order"}
+                )
         }
 )
 @Getter
@@ -52,6 +58,9 @@ public class ProductClassificationDao {
 
     @Column(length = 100)
     private String icon;
+
+    @Column(name = "sort_order", nullable = false)
+    private Integer position;
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

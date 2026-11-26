@@ -65,13 +65,13 @@ public interface ProductClassificationRepository
     );
 
     List<ProductClassificationDao>
-    findAllByParent_IdAndIsActiveTrueOrderByNameAsc(UUID parentId);
+    findAllByParent_IdAndIsActiveTrueOrderByPositionAsc(UUID parentId);
 
     List<ProductClassificationDao>
-    findAllByParentIsNullAndIsActiveTrueOrderByNameAsc();
+    findAllByParentIsNullAndIsActiveTrueOrderByPositionAsc();
 
     List<ProductClassificationDao>
-    findAllByLevelAndIsActiveTrueOrderByNameAsc(
+    findAllByLevelAndIsActiveTrueOrderByPositionAsc(
             ProductClassificationLevel level
     );
 
@@ -83,6 +83,17 @@ public interface ProductClassificationRepository
     );
 
     boolean existsByParent_Id(UUID parentId);
+
+    boolean existsByLevelAndPosition(
+            ProductClassificationLevel level,
+            Integer position
+    );
+
+    boolean existsByLevelAndPositionAndIdNot(
+            ProductClassificationLevel level,
+            Integer position,
+            UUID id
+    );
 
     /*
      * The given classification and all of its active descendants.
@@ -105,7 +116,7 @@ public interface ProductClassificationRepository
                     )
                     SELECT *
                     FROM subtree
-                    ORDER BY name
+                    ORDER BY level, sort_order
                     """,
             nativeQuery = true
     )

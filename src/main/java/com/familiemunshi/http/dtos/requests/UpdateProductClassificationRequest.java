@@ -3,6 +3,7 @@ package com.familiemunshi.http.dtos.requests;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -48,12 +49,21 @@ public class UpdateProductClassificationRequest
     @Size(max = 100)
     String icon;
 
+    @Schema(
+            description = "Display position within its level. Must be unique per level. Omit to keep current position.",
+            example = "1",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    @Positive
+    Integer position;
+
     public ProductClassification toEntity() {
         return ProductClassification.builder()
                 .name(this.name)
                 .level(this.level)
                 .parentId(this.parentId)
                 .icon(this.icon)
+                .position(this.position)
                 .build();
     }
 }

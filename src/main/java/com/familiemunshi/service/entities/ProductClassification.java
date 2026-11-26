@@ -17,6 +17,7 @@ public record ProductClassification(
         UUID parentId,
         String parentName,
         String icon,
+        Integer position,
         boolean isActive
 ) {
 }

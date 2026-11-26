@@ -9,6 +9,7 @@ import com.familiemunshi.mapper.ProductClassificationMapper;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 
+import com.familiemunshi.service.exceptions.DuplicateProductClassificationPositionException;
 import com.familiemunshi.service.exceptions.InvalidProductClassificationHierarchyException;
 import com.familiemunshi.service.filters.FindAllProductClassificationsFilter;
 import com.familiemunshi.common.utils.Util;
@@ -39,6 +40,12 @@ public class ProductClassificationService {
     ) {
         validateName(classification.name());
         validateLevel(classification.level());
+        validatePosition(classification.position());
+        ensurePositionAvailable(
+                classification.level(),
+                classification.position(),
+                null
+        );
 
         ProductClassificationDao parent = resolveParent(
                 classification.level(),
@@ -119,7 +126,7 @@ public class ProductClassificationService {
     public List<ProductClassification> getRootClassifications() {
 
         return productClassificationRepository
-                .findAllByParentIsNullAndIsActiveTrueOrderByNameAsc()
+                .findAllByParentIsNullAndIsActiveTrueOrderByPositionAsc()
                 .stream()
                 .map(ProductClassificationMapper::toEntity)
                 .toList();
@@ -133,7 +140,7 @@ public class ProductClassificationService {
         getActiveClassification(parentId);
 
         return productClassificationRepository
-                .findAllByParent_IdAndIsActiveTrueOrderByNameAsc(parentId)
+                .findAllByParent_IdAndIsActiveTrueOrderByPositionAsc(parentId)
                 .stream()
                 .map(ProductClassificationMapper::toEntity)
                 .toList();
@@ -147,7 +154,7 @@ public class ProductClassificationService {
         validateLevel(level);
 
         return productClassificationRepository
-                .findAllByLevelAndIsActiveTrueOrderByNameAsc(level)
+                .findAllByLevelAndIsActiveTrueOrderByPositionAsc(level)
                 .stream()
                 .map(ProductClassificationMapper::toEntity)
                 .toList();
@@ -184,8 +191,13 @@ public class ProductClassificationService {
                 ? existingClassification.getParent().getId()
                 : null;
 
+        Integer updatedPosition = classification.position() != null
+                ? classification.position()
+                : existingClassification.getPosition();
+
         validateName(updatedName);
         validateLevel(updatedLevel);
+        validatePosition(updatedPosition);
 
         // Validate the new parent and hierarchy.
         ProductClassificationDao updatedParent =
@@ -197,6 +209,11 @@ public class ProductClassificationService {
         // Validate existing children against the new level.
         validateExistingChildren(id, updatedLevel);
 
+        if (!updatedPosition.equals(existingClassification.getPosition())
+                || updatedLevel != existingClassification.getLevel()) {
+            ensurePositionAvailable(updatedLevel, updatedPosition, id);
+        }
+
         if (!existingClassification.getName().equals(updatedName)) {
 
             String updatedCode = generateUniqueCode(updatedName);
@@ -206,6 +223,7 @@ public class ProductClassificationService {
         existingClassification.setName(updatedName);
         existingClassification.setLevel(updatedLevel);
         existingClassification.setParent(updatedParent);
+        existingClassification.setPosition(updatedPosition);
 
         // null = keep current icon, blank = remove icon.
         if (classification.icon() != null) {
@@ -355,7 +373,7 @@ public class ProductClassificationService {
 
         List<ProductClassificationDao> children =
                 productClassificationRepository
-                        .findAllByParent_IdAndIsActiveTrueOrderByNameAsc(
+                        .findAllByParent_IdAndIsActiveTrueOrderByPositionAsc(
                                 classificationId
                         );
 
@@ -462,6 +480,36 @@ public class ProductClassificationService {
             throw new BadRequestException(
                     "Product classification level is required."
             );
+        }
+    }
+
+    private void validatePosition(Integer position) {
+        if (position == null) {
+            throw new BadRequestException(
+                    "Product classification position is required."
+            );
+        }
+
+        if (position <= 0) {
+            throw new BadRequestException(
+                    "Product classification position must be a positive number."
+            );
+        }
+    }
+
+    private void ensurePositionAvailable(
+            ProductClassificationLevel level,
+            Integer position,
+            UUID excludeId
+    ) {
+        boolean taken = excludeId == null
+                ? productClassificationRepository
+                        .existsByLevelAndPosition(level, position)
+                : productClassificationRepository
+                        .existsByLevelAndPositionAndIdNot(level, position, excludeId);
+
+        if (taken) {
+            throw new DuplicateProductClassificationPositionException(position, level);
         }
     }
 }

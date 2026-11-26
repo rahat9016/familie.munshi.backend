@@ -7,5 +7,6 @@ public record ProductClassificationTreeResponse(
         UUID id,
         String name,
         String icon,
+        Integer position,
         List<ProductClassificationTreeResponse> children
 ) {}

@@ -28,6 +28,7 @@ public class ProductClassificationMapper {
                         ? dao.getParent().getName()
                         : null)
                 .icon(dao.getIcon())
+                .position(dao.getPosition())
                 .isActive(dao.isActive())
                 .build();
     }
@@ -46,6 +47,7 @@ public class ProductClassificationMapper {
                         .build()
                         : null)
                 .icon(domain.icon())
+                .position(domain.position())
                 .isActive(domain.isActive())
                 .build();
     }
@@ -66,6 +68,7 @@ public class ProductClassificationMapper {
                             item.id(),
                             item.name(),
                             item.icon(),
+                            item.position(),
                             new ArrayList<>()
                     )
             );

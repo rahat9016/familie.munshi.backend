@@ -120,8 +120,8 @@ public class ProductClassificationController {
                 page - 1,
                 size,
                 Sort.by(
-                        Sort.Order.desc("createdAt"),
-                        Sort.Order.desc("id")
+                        Sort.Order.asc("level"),
+                        Sort.Order.asc("position")
                 )
         );
 

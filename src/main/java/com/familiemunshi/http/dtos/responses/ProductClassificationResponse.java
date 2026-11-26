@@ -16,6 +16,7 @@ public class ProductClassificationResponse {
     private UUID parentId;
     private String parentName;
     private String icon;
+    private Integer position;
     private boolean isActive;
 
     public ProductClassificationResponse(ProductClassification classification) {
@@ -26,6 +27,7 @@ public class ProductClassificationResponse {
         this.parentId = classification.parentId();
         this.parentName = classification.parentName();
         this.icon = classification.icon();
+        this.position = classification.position();
         this.isActive = classification.isActive();
     }
 }

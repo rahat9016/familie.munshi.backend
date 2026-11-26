@@ -1,8 +1,10 @@
 package com.familiemunshi.http.controllers;
 
 
+import com.familiemunshi.common.service.TokenRevocationService;
 import com.familiemunshi.common.utils.JwtUtil;
 import com.familiemunshi.http.dtos.requests.LoginRequest;
+import com.familiemunshi.http.dtos.requests.LogoutRequest;
 import com.familiemunshi.http.dtos.requests.RefreshTokenRequest;
 import com.familiemunshi.http.dtos.requests.SignupRequest;
 import com.familiemunshi.http.dtos.responses.RefreshTokenResponse;
@@ -15,6 +17,7 @@ import com.familiemunshi.service.entities.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,6 +40,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final TokenRevocationService tokenRevocationService;
 
     @PostMapping(SIGNUP)
     @Operation(summary = "Sign up a new user.x", responses = {@ApiResponse(responseCode = "201", description = "User created."), @ApiResponse(responseCode = "400", description = "Invalid input."), @ApiResponse(responseCode = "401", description = "Unauthenticated."), @ApiResponse(responseCode = "409", description = "User already exists.")})
@@ -87,6 +91,13 @@ public class AuthController {
             );
         }
 
+        if (tokenRevocationService.isRevoked(refreshToken)) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid or expired refresh token"
+            );
+        }
+
         UUID userId;
         try {
             userId = jwtUtil.extractUserId(refreshToken);
@@ -100,6 +111,27 @@ public class AuthController {
         String newAccessToken = jwtUtil.generateUserToken(user.id(), user.email());
 
         return ResponseEntity.ok(SuccessResponse.of("Token refreshed successfully", new RefreshTokenResponse(newAccessToken)));
+    }
+
+    @PostMapping(LOGOUT)
+    @Operation(summary = "Logout user.", responses = {
+            @ApiResponse(responseCode = "200", description = "Logged out."),
+            @ApiResponse(responseCode = "401", description = "Unauthenticated.")
+    })
+    public ResponseEntity<SuccessResponse<Void>> logout(
+            HttpServletRequest request,
+            @RequestBody(required = false) LogoutRequest logoutRequest) {
+
+        String accessToken = request.getHeader("Authorization").substring(7);
+        tokenRevocationService.revoke(accessToken, jwtUtil.getRemainingMillis(accessToken));
+
+        if (logoutRequest != null && logoutRequest.getRefreshToken() != null
+                && !logoutRequest.getRefreshToken().isBlank()) {
+            String refreshToken = logoutRequest.getRefreshToken();
+            tokenRevocationService.revoke(refreshToken, jwtUtil.getRemainingMillis(refreshToken));
+        }
+
+        return ResponseEntity.ok(SuccessResponse.of("Logged out successfully", null));
     }
 
 }

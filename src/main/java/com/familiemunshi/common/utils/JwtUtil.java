@@ -86,4 +86,16 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public long getRemainingMillis(String token) {
+        try {
+            Date expiration = extractAllClaims(token).getExpiration();
+            if (expiration == null) {
+                return 0;
+            }
+            return Math.max(0, expiration.getTime() - System.currentTimeMillis());
+        } catch (JwtException | IllegalArgumentException e) {
+            return 0;
+        }
+    }
 }

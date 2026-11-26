@@ -1,5 +1,6 @@
 package com.familiemunshi.common.component;
 
+import com.familiemunshi.common.service.TokenRevocationService;
 import com.familiemunshi.common.utils.JwtUtil;
 import com.familiemunshi.jpa.repositories.UserRepository;
 import com.familiemunshi.service.UserService;
@@ -28,6 +29,9 @@ public class FilterApiRequest extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TokenRevocationService tokenRevocationService;
+
 
     @Override
     protected void doFilterInternal(
@@ -45,6 +49,14 @@ public class FilterApiRequest extends OncePerRequestFilter {
             response.sendError(
                     HttpServletResponse.SC_UNAUTHORIZED,
                     "Invalid or expired access token"
+            );
+            return;
+        }
+
+        if (tokenRevocationService.isRevoked(token)) {
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Token has been revoked"
             );
             return;
         }

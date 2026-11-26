@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(POST, API_BASE + AUTH + "/signup").permitAll()
                         .requestMatchers(POST, API_BASE + AUTH + "/refresh-token").permitAll()
                         .requestMatchers(POST, API_BASE + AUTH + "/activate-branch-admin").permitAll()
+                        .requestMatchers(POST, API_BASE + AUTH + LOGOUT).authenticated()
 
                         // User management endpoints
                         .requestMatchers(GET, API_BASE + USERS + "/me")

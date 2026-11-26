@@ -14,6 +14,7 @@ public class Constants {
     public static final String LOGIN = "/login";
     public static final String SIGNUP = "/signup";
     public static final String REFRESH_TOKEN = "/refresh-token";
+    public static final String LOGOUT = "/logout";
 
     // USERS
     public static final String USERS = "/users";

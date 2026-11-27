@@ -1,11 +1,11 @@
 package com.familiemunshi.mapper;
 
-import com.familiemunshi.http.dtos.responses.ProductClassificationResponse;
 import com.familiemunshi.http.dtos.responses.ProductClassificationTreeResponse;
 import com.familiemunshi.jpa.daos.ProductClassificationDao;
 import com.familiemunshi.service.entities.ProductClassification;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class ProductClassificationMapper {
 
@@ -53,7 +53,8 @@ public class ProductClassificationMapper {
     }
 
     public static List<ProductClassificationTreeResponse> toTree(
-            List<ProductClassification> classifications
+            List<ProductClassification> classifications,
+            Function<ProductClassification, String> iconUrlResolver
     ) {
         if (classifications == null || classifications.isEmpty()) {
             return Collections.emptyList();
@@ -67,7 +68,9 @@ public class ProductClassificationMapper {
                     new ProductClassificationTreeResponse(
                             item.id(),
                             item.name(),
-                            item.icon(),
+                            item.iconType(),
+                            item.lucideIconName(),
+                            iconUrlResolver.apply(item),
                             item.position(),
                             new ArrayList<>()
                     )

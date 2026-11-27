@@ -1,43 +1,56 @@
-
 package com.familiemunshi.service;
 
+import com.familiemunshi.common.component.StorageFileSupport;
 import com.familiemunshi.common.exceptions.BadRequestException;
 import com.familiemunshi.common.exceptions.ResourceNotFoundException;
+import com.familiemunshi.common.service.FileStorageService;
+import com.familiemunshi.common.utils.Util;
+import com.familiemunshi.http.validations.ValidationUtil;
 import com.familiemunshi.jpa.daos.ProductClassificationDao;
 import com.familiemunshi.jpa.repositories.ProductClassificationRepository;
 import com.familiemunshi.mapper.ProductClassificationMapper;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
-
 import com.familiemunshi.service.exceptions.DuplicateProductClassificationPositionException;
 import com.familiemunshi.service.exceptions.InvalidProductClassificationHierarchyException;
 import com.familiemunshi.service.filters.FindAllProductClassificationsFilter;
-import com.familiemunshi.common.utils.Util;
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.Normalizer;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ProductClassificationService {
 
+    private static final String ICON_DIRECTORY =
+            StorageFileSupport.PRODUCT_CLASSIFICATION_ICONS;
+    private static final long ICON_MAX_SIZE_KB = 512;
+    private static final int ICON_URL_EXPIRY_MINUTES = 7 * 24 * 60;
+
     private final ProductClassificationRepository productClassificationRepository;
+    private final FileStorageService fileStorageService;
 
     public ProductClassification createProductClassification(
-            ProductClassification classification
+            ProductClassification classification,
+            MultipartFile iconFile
     ) {
+        validateIconInput(classification.icon(), iconFile);
         validateName(classification.name());
         validateLevel(classification.level());
         validatePosition(classification.position());
@@ -58,9 +71,11 @@ public class ProductClassificationService {
                 ProductClassificationMapper.toDao(classification);
 
         classificationDao.setCode(code);
-        classificationDao.setIcon(normalizeIcon(classification.icon()));
         classificationDao.setParent(parent);
-        classificationDao.setActive(true);
+        classificationDao.setActive(classification.isActive());
+
+        // Upload last, after every validation has passed.
+        classificationDao.setIcon(resolveNewIcon(classification.icon(), iconFile));
 
         ProductClassificationDao savedClassification =
                 productClassificationRepository.save(classificationDao);
@@ -160,21 +175,41 @@ public class ProductClassificationService {
                 .toList();
     }
 
+    /*
+     * Admin view (PRODUCT_CLASSIFICATION_VIEW): returns active and
+     * inactive classifications so inactive ones can be edited.
+     */
     @Transactional(readOnly = true)
     public ProductClassification getProductClassificationById(
             UUID id
     ) {
 
-        return getActiveClassification(id);
+        return ProductClassificationMapper.toEntity(
+                findClassificationDao(id)
+        );
     }
 
+    /*
+     * Icon rules (single icon column):
+     *   iconFile sent     -> upload to S3, store key
+     *   icon = "shirt"    -> store lucide name
+     *   icon = ""         -> remove icon
+     *   neither sent      -> keep current icon
+     *   both sent         -> 400
+     * A replaced or removed uploaded file is deleted after commit.
+     */
     public ProductClassification updateProductClassification(
             UUID id,
-            ProductClassification classification
+            ProductClassification classification,
+            MultipartFile iconFile,
+            Boolean isActive
     ) {
 
+        validateIconInput(classification.icon(), iconFile);
+
+        // Any status, so a deactivated classification can be re-activated.
         ProductClassificationDao existingClassification =
-                findActiveClassificationDao(id);
+                findClassificationDao(id);
 
         String updatedName = classification.name() != null
                 ? classification.name().trim()
@@ -225,13 +260,25 @@ public class ProductClassificationService {
         existingClassification.setParent(updatedParent);
         existingClassification.setPosition(updatedPosition);
 
-        // null = keep current icon, blank = remove icon.
-        if (classification.icon() != null) {
-            existingClassification.setIcon(normalizeIcon(classification.icon()));
+        if (isActive != null) {
+            existingClassification.setActive(isActive);
+        }
+
+        String previousIcon = existingClassification.getIcon();
+
+        if (hasFile(iconFile) || classification.icon() != null) {
+            existingClassification.setIcon(
+                    resolveNewIcon(classification.icon(), iconFile)
+            );
         }
 
         ProductClassificationDao updatedClassification =
                 productClassificationRepository.save(existingClassification);
+
+        if (ProductClassification.isUploadedIcon(previousIcon)
+                && !previousIcon.equals(updatedClassification.getIcon())) {
+            deleteFileAfterCommit(previousIcon);
+        }
 
         return ProductClassificationMapper.toEntity(updatedClassification);
     }
@@ -239,16 +286,7 @@ public class ProductClassificationService {
 
     public void deleteProductClassification(UUID id) {
 
-        ProductClassificationDao classification =
-                productClassificationRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Product classification",
-                                        "id",
-                                        id
-                                )
-                        );
+        ProductClassificationDao classification = findClassificationDao(id);
 
         if (productClassificationRepository.existsByParent_Id(id)) {
             throw new InvalidProductClassificationHierarchyException(
@@ -257,8 +295,131 @@ public class ProductClassificationService {
             );
         }
 
+        String icon = classification.getIcon();
+
         productClassificationRepository.delete(classification);
+
+        if (ProductClassification.isUploadedIcon(icon)) {
+            deleteFileAfterCommit(icon);
+        }
     }
+
+    /** Presigned URL for an uploaded icon, null for lucide icons or no icon. */
+    public String getIconUrl(ProductClassification classification) {
+
+        if (classification == null || !classification.hasUploadedIcon()) {
+            return null;
+        }
+
+        return fileStorageService.getPresignedUrl(
+                classification.icon(),
+                ICON_URL_EXPIRY_MINUTES
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Icon handling
+    // ------------------------------------------------------------------
+
+    /*
+     * Validate before any DB work or upload: one source only,
+     * file format/size/content, lucide name format.
+     */
+    private void validateIconInput(String lucideName, MultipartFile iconFile) {
+
+        boolean hasName = lucideName != null && !lucideName.isBlank();
+
+        if (hasFile(iconFile) && hasName) {
+            throw new BadRequestException("iconSourceConflict");
+        }
+
+        if (hasFile(iconFile)) {
+            ValidationUtil.validateIcon(iconFile, ICON_MAX_SIZE_KB);
+        } else {
+            ValidationUtil.validateLucideIconName(lucideName);
+        }
+    }
+
+    /*
+     * Value for the icon column: S3 key for a file, trimmed lucide
+     * name, or null. Input must already be validated.
+     */
+    private String resolveNewIcon(String lucideName, MultipartFile iconFile) {
+
+        if (hasFile(iconFile)) {
+            return uploadIcon(iconFile);
+        }
+
+        if (lucideName == null || lucideName.isBlank()) {
+            return null;
+        }
+
+        return lucideName.trim();
+    }
+
+    private String uploadIcon(MultipartFile iconFile) {
+
+        requireActiveTransaction();
+
+        String key = fileStorageService.uploadPublicFile(iconFile, ICON_DIRECTORY);
+
+        deleteFileOnRollback(key);
+
+        return key;
+    }
+
+    private static boolean hasFile(MultipartFile file) {
+        return file != null && !file.isEmpty();
+    }
+
+    private void requireActiveTransaction() {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || !TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new IllegalStateException("Active transaction required");
+        }
+    }
+
+    private void deleteFileOnRollback(String key) {
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != STATUS_COMMITTED) {
+                            safeDeleteFile(key);
+                        }
+                    }
+                }
+        );
+    }
+
+    private void deleteFileAfterCommit(String key) {
+
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            safeDeleteFile(key);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        safeDeleteFile(key);
+                    }
+                }
+        );
+    }
+
+    private void safeDeleteFile(String key) {
+        try {
+            fileStorageService.deleteFile(key);
+        } catch (Exception exception) {
+            log.error("Failed to delete product classification icon: {}", key, exception);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Lookup
+    // ------------------------------------------------------------------
 
     private ProductClassification getActiveClassification(UUID id) {
 
@@ -267,9 +428,22 @@ public class ProductClassificationService {
         );
     }
 
+    private ProductClassificationDao findClassificationDao(UUID id) {
+
+        return productClassificationRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Product classification",
+                                "id",
+                                id
+                        )
+                );
+    }
+
     /*
-     * Write paths (update, delete, parent assignment) need the managed
-     * JPA object so changes are persisted; read paths use the entity.
+     * Write paths (parent assignment) need the managed JPA object so
+     * changes are persisted; read paths use the entity.
      */
     private ProductClassificationDao findActiveClassificationDao(UUID id) {
 
@@ -283,6 +457,10 @@ public class ProductClassificationService {
                         )
                 );
     }
+
+    // ------------------------------------------------------------------
+    // Hierarchy
+    // ------------------------------------------------------------------
 
     private ProductClassificationDao resolveParent(
             ProductClassificationLevel level,
@@ -325,7 +503,8 @@ public class ProductClassificationService {
 
     /*
      * Allowed parent levels for a classification level.
-     * SEGMENT is optional: SUB_CATEGORY may sit directly under CATEGORY.
+     * GROUP -> PARENT_CATEGORY -> [SEGMENT] -> CATEGORY -> SUB_CATEGORY
+     * SEGMENT is optional: CATEGORY may sit directly under PARENT_CATEGORY.
      */
     private Set<ProductClassificationLevel> getAllowedParentLevels(
             ProductClassificationLevel level
@@ -334,12 +513,12 @@ public class ProductClassificationService {
         return switch (level) {
             case GROUP -> EnumSet.noneOf(ProductClassificationLevel.class);
             case PARENT_CATEGORY -> EnumSet.of(ProductClassificationLevel.GROUP);
-            case CATEGORY -> EnumSet.of(ProductClassificationLevel.PARENT_CATEGORY);
-            case SEGMENT -> EnumSet.of(ProductClassificationLevel.CATEGORY);
-            case SUB_CATEGORY -> EnumSet.of(
-                    ProductClassificationLevel.CATEGORY,
+            case SEGMENT -> EnumSet.of(ProductClassificationLevel.PARENT_CATEGORY);
+            case CATEGORY -> EnumSet.of(
+                    ProductClassificationLevel.PARENT_CATEGORY,
                     ProductClassificationLevel.SEGMENT
             );
+            case SUB_CATEGORY -> EnumSet.of(ProductClassificationLevel.CATEGORY);
         };
     }
 
@@ -349,12 +528,12 @@ public class ProductClassificationService {
 
         return switch (level) {
             case GROUP -> EnumSet.of(ProductClassificationLevel.PARENT_CATEGORY);
-            case PARENT_CATEGORY -> EnumSet.of(ProductClassificationLevel.CATEGORY);
-            case CATEGORY -> EnumSet.of(
+            case PARENT_CATEGORY -> EnumSet.of(
                     ProductClassificationLevel.SEGMENT,
-                    ProductClassificationLevel.SUB_CATEGORY
+                    ProductClassificationLevel.CATEGORY
             );
-            case SEGMENT -> EnumSet.of(ProductClassificationLevel.SUB_CATEGORY);
+            case SEGMENT -> EnumSet.of(ProductClassificationLevel.CATEGORY);
+            case CATEGORY -> EnumSet.of(ProductClassificationLevel.SUB_CATEGORY);
             case SUB_CATEGORY -> EnumSet.noneOf(ProductClassificationLevel.class);
         };
     }
@@ -420,6 +599,10 @@ public class ProductClassificationService {
         }
     }
 
+    // ------------------------------------------------------------------
+    // Field validation
+    // ------------------------------------------------------------------
+
     private String generateUniqueCode(String name) {
 
         String baseCode = normalizeCode(name);
@@ -464,15 +647,6 @@ public class ProductClassificationService {
                     "Product classification name cannot exceed 150 characters."
             );
         }
-    }
-
-    private String normalizeIcon(String icon) {
-
-        if (icon == null || icon.isBlank()) {
-            return null;
-        }
-
-        return icon.trim();
     }
 
     private void validateLevel(ProductClassificationLevel level) {

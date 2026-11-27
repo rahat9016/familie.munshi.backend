@@ -1,61 +1,89 @@
 package com.familiemunshi.http.dtos.requests;
 
+import com.familiemunshi.http.validations.ValidationUtil;
 import com.familiemunshi.service.entities.ProductClassification;
 import com.familiemunshi.service.enums.ProductClassificationLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
-@Schema(
-        description = "The request body for updating a product classification"
-)
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+
 @Getter
 @Setter
 @NoArgsConstructor
-public class UpdateProductClassificationRequest
-{
+@Schema(
+        description = "Multipart request body for updating a product classification"
+)
+public class UpdateProductClassificationRequest {
+
     @Schema(
             description = "The name of the product classification",
             example = "Electronics",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            requiredMode = NOT_REQUIRED
     )
     @Size(min = 1, max = 255)
-    String name;
+    private String name;
 
     @Schema(
             description = "The level of the product classification",
             example = "CATEGORY",
-            allowableValues = {"GROUP", "PARENT_CATEGORY", "CATEGORY", "SEGMENT", "SUB_CATEGORY"},
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            allowableValues = {"GROUP", "PARENT_CATEGORY", "SEGMENT", "CATEGORY", "SUB_CATEGORY"},
+            requiredMode = NOT_REQUIRED
     )
-    ProductClassificationLevel level;
+    private ProductClassificationLevel level;
 
     @Schema(
             description = "The ID of the parent product classification",
             example = "550e8400-e29b-41d4-a716-446655440000",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            requiredMode = NOT_REQUIRED
     )
-    UUID parentId;
+    private UUID parentId;
 
     @Schema(
-            description = "Icon name or URL. Omit to keep current icon, send empty string to remove it",
-            example = "shirt",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            description = "lucide-react icon name. Omit to keep the current icon, "
+                    + "send an empty string to remove it. Do not send together with iconFile.",
+            example = "shopping-cart",
+            requiredMode = NOT_REQUIRED
     )
     @Size(max = 100)
-    String icon;
+    @Pattern(
+            regexp = "^$|" + ValidationUtil.LUCIDE_ICON_NAME_REGEX,
+            message = "Icon must be a valid lucide-react icon name"
+    )
+    private String icon;
 
     @Schema(
-            description = "Display position within its level. Must be unique per level. Omit to keep current position.",
+            description = "New icon file uploaded to S3: SVG, PNG, WEBP or JPG, max 512 KB. "
+                    + "Replaces the current icon. Do not send together with icon.",
+            type = "string",
+            format = "binary",
+            requiredMode = NOT_REQUIRED
+    )
+    private MultipartFile iconFile;
+
+    @Schema(
+            description = "Display position within its level. Must be unique per level. "
+                    + "Omit to keep current position.",
             example = "1",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            requiredMode = NOT_REQUIRED
     )
     @Positive
-    Integer position;
+    private Integer position;
+
+    @Schema(
+            description = "Whether the product classification is active. Omit to keep current.",
+            example = "true",
+            requiredMode = NOT_REQUIRED
+    )
+    private Boolean isActive;
 
     public ProductClassification toEntity() {
         return ProductClassification.builder()

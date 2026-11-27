@@ -23,8 +23,8 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -46,14 +46,16 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_CREATE')"
     )
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Create a new product classification.",
+            description = "Multipart form. Icon is either a lucide-react name (icon) "
+                    + "or an uploaded SVG/PNG/WEBP/JPG file up to 512 KB (iconFile), not both.",
             responses = {
                     @ApiResponse(responseCode = "201",
                             description = "Classification created."),
                     @ApiResponse(responseCode = "400",
-                            description = "Invalid input."),
+                            description = "Invalid input or icon."),
                     @ApiResponse(responseCode = "401",
                             description = "Unauthenticated."),
                     @ApiResponse(responseCode = "403",
@@ -64,19 +66,20 @@ public class ProductClassificationController {
     )
     public ResponseEntity<SuccessResponse<ProductClassificationResponse>>
     createClassification(
-            @Valid @RequestBody CreateProductClassificationRequest request
+            @Valid @ModelAttribute CreateProductClassificationRequest request
     ) {
 
         ProductClassification savedClassification =
                 productClassificationService.createProductClassification(
-                        request.toEntity()
+                        request.toEntity(),
+                        request.getIconFile()
                 );
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         SuccessResponse.of(
                                 "Product classification created successfully",
-                                new ProductClassificationResponse(savedClassification)
+                                toResponse(savedClassification)
                         )
                 );
     }
@@ -87,7 +90,8 @@ public class ProductClassificationController {
     @GetMapping
     @Operation(
             summary = "Get all product classifications.",
-            description = "Search and filter product classifications by level and status with pagination.",
+            description = "Search and filter product classifications by level and status with pagination. "
+                    + "Ordered by hierarchy level, then position.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Classifications retrieved."),
@@ -116,14 +120,8 @@ public class ProductClassificationController {
             int size
     ) {
 
-        Pageable pageable = PageRequest.of(
-                page - 1,
-                size,
-                Sort.by(
-                        Sort.Order.asc("level"),
-                        Sort.Order.asc("position")
-                )
-        );
+        // Hierarchy ordering is defined in the repository query.
+        Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ProductClassification> classifications =
                 productClassificationService.getAllProductClassificationsByFilter(
@@ -133,7 +131,7 @@ public class ProductClassificationController {
 
         List<ProductClassificationResponse> response = classifications.getContent()
                 .stream()
-                .map(ProductClassificationResponse::new)
+                .map(this::toResponse)
                 .toList();
 
         return ResponseEntity.ok(
@@ -165,7 +163,8 @@ public class ProductClassificationController {
     ) {
         List<ProductClassificationTreeResponse> roots =
                 ProductClassificationMapper.toTree(
-                        productClassificationService.getActiveClassificationsByGroup(groupId)
+                        productClassificationService.getActiveClassificationsByGroup(groupId),
+                        productClassificationService::getIconUrl
                 );
 
         return ResponseEntity.ok(
@@ -192,7 +191,7 @@ public class ProductClassificationController {
         List<ProductClassificationResponse> response =
                 productClassificationService.getRootClassifications()
                         .stream()
-                        .map(ProductClassificationResponse::new)
+                        .map(this::toResponse)
                         .toList();
 
         return ResponseEntity.ok(
@@ -226,7 +225,7 @@ public class ProductClassificationController {
         List<ProductClassificationResponse> response =
                 productClassificationService.getChildClassifications(id)
                         .stream()
-                        .map(ProductClassificationResponse::new)
+                        .map(this::toResponse)
                         .toList();
 
         return ResponseEntity.ok(
@@ -260,7 +259,7 @@ public class ProductClassificationController {
         List<ProductClassificationResponse> response =
                 productClassificationService.getClassificationsByLevel(level)
                         .stream()
-                        .map(ProductClassificationResponse::new)
+                        .map(this::toResponse)
                         .toList();
 
         return ResponseEntity.ok(
@@ -277,6 +276,7 @@ public class ProductClassificationController {
     @GetMapping(ID)
     @Operation(
             summary = "Get product classification by ID.",
+            description = "Returns active and inactive classifications.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Classification retrieved."),
@@ -291,15 +291,10 @@ public class ProductClassificationController {
             @PathVariable UUID id
     ) {
 
-        ProductClassificationResponse response =
-                new ProductClassificationResponse(
-                        productClassificationService.getProductClassificationById(id)
-                );
-
         return ResponseEntity.ok(
                 SuccessResponse.of(
                         "Product classification retrieved successfully",
-                        response
+                        toResponse(productClassificationService.getProductClassificationById(id))
                 )
         );
     }
@@ -307,14 +302,16 @@ public class ProductClassificationController {
     @PreAuthorize(
             "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_UPDATE')"
     )
-    @PatchMapping(ID)
+    @PatchMapping(value = ID, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Update a product classification.",
+            description = "Multipart form. Send icon (lucide-react name) or iconFile to change the icon, "
+                    + "icon=\"\" to remove it, or neither to keep it. isActive toggles status.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "Classification updated."),
                     @ApiResponse(responseCode = "400",
-                            description = "Invalid input."),
+                            description = "Invalid input or icon."),
                     @ApiResponse(responseCode = "404",
                             description = "Classification not found."),
                     @ApiResponse(responseCode = "409",
@@ -326,18 +323,20 @@ public class ProductClassificationController {
     public ResponseEntity<SuccessResponse<ProductClassificationResponse>>
     updateClassification(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProductClassificationRequest request
+            @Valid @ModelAttribute UpdateProductClassificationRequest request
     ) {
         ProductClassification updatedClassification =
                 productClassificationService.updateProductClassification(
                         id,
-                        request.toEntity()
+                        request.toEntity(),
+                        request.getIconFile(),
+                        request.getIsActive()
                 );
 
         return ResponseEntity.ok(
                 SuccessResponse.of(
                         "Product classification updated successfully",
-                        new ProductClassificationResponse(updatedClassification)
+                        toResponse(updatedClassification)
                 )
         );
     }
@@ -373,5 +372,11 @@ public class ProductClassificationController {
                 )
         );
     }
-}
 
+    private ProductClassificationResponse toResponse(ProductClassification classification) {
+        return new ProductClassificationResponse(
+                classification,
+                productClassificationService.getIconUrl(classification)
+        );
+    }
+}

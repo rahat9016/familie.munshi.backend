@@ -13,11 +13,15 @@ import java.util.stream.Stream;
 @Getter
 public enum ProductClassificationLevel {
 
+    /*
+     * Hierarchy order. SEGMENT is optional:
+     * GROUP -> PARENT_CATEGORY -> [SEGMENT] -> CATEGORY -> SUB_CATEGORY
+     */
     GROUP("Top Level Group"),
     PARENT_CATEGORY("Group's Parent Category"),
-    CATEGORY("Parent Category's Category"),
-    SEGMENT("Category's Segment"),
-    SUB_CATEGORY("Segment's Sub Category");
+    SEGMENT("Parent Category's Segment"),
+    CATEGORY("Segment's Category"),
+    SUB_CATEGORY("Category's Sub Category");
 
     private final String code;
 

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -22,6 +23,7 @@ public class StorageFileSupport {
     public static final String BRAND_LOGOS = "brands/logos";
     public static final String COLORWAY_IMAGES = "colorways/images";
     public static final String COMPANY_LOGOS = "company/logos";
+    public static final String PRODUCT_CLASSIFICATION_ICONS = "product-classifications/icons";
     public static final String PRODUCT_IMAGES = "products/images";
     public static final String USER_PROFILE_PICTURES = "users/profile-pictures";
 
@@ -30,6 +32,7 @@ public class StorageFileSupport {
             BRAND_LOGOS,
             COLORWAY_IMAGES,
             COMPANY_LOGOS,
+            PRODUCT_CLASSIFICATION_ICONS,
             PRODUCT_IMAGES,
             USER_PROFILE_PICTURES
     );
@@ -38,9 +41,21 @@ public class StorageFileSupport {
             "jpg", "jpeg", "png", "webp"
     );
 
+    // SVG is only accepted for icons, after ValidationUtil.validateIcon.
+    private static final Set<String> ICON_EXTENSIONS = Set.of(
+            "svg", "jpg", "jpeg", "png", "webp"
+    );
+
     private final FileStorageProperties properties;
 
     public void validate(MultipartFile file) {
+        validate(file, properties.getAllowedExtensions());
+    }
+
+    private void validate(
+            MultipartFile file,
+            Collection<String> allowedExtensions
+    ) {
 
         if (file == null || file.isEmpty()) {
             throw new StorageException("File cannot be empty");
@@ -62,7 +77,7 @@ public class StorageFileSupport {
 
         String extension = extensionOf(filename);
 
-        if (!properties.getAllowedExtensions().contains(extension)) {
+        if (!allowedExtensions.contains(extension)) {
             throw new StorageException(
                     "File extension is not allowed: " + extension
             );
@@ -86,23 +101,22 @@ public class StorageFileSupport {
             String directory
     ) {
 
-        validate(file);
-
         if (directory == null || !PUBLIC_DIRECTORIES.contains(directory)) {
             throw new StorageException(
                     "Invalid public storage directory: " + directory
             );
         }
 
+        Set<String> allowedExtensions =
+                PRODUCT_CLASSIFICATION_ICONS.equals(directory)
+                        ? ICON_EXTENSIONS
+                        : IMAGE_EXTENSIONS;
+
+        validate(file, allowedExtensions);
+
         String extension = extensionOf(
                 Objects.requireNonNull(file.getOriginalFilename())
         );
-
-        if (!IMAGE_EXTENSIONS.contains(extension)) {
-            throw new StorageException(
-                    "Public assets must be images"
-            );
-        }
 
         return "public/"
                 + directory

@@ -20,6 +20,11 @@ public interface ProductClassificationRepository
             UUID id
     );
 
+    /*
+     * Ordered by hierarchy (GROUP, PARENT_CATEGORY, SEGMENT, CATEGORY,
+     * SUB_CATEGORY), then position. level is stored as a string, so a
+     * plain ORDER BY level would sort alphabetically.
+     */
     @Query(
             value = """
                     SELECT c
@@ -37,6 +42,15 @@ public interface ProductClassificationRepository
                         :filterActive = false
                         OR c.isActive = :activeValue
                     )
+                    ORDER BY
+                        CASE c.level
+                            WHEN com.familiemunshi.service.enums.ProductClassificationLevel.GROUP THEN 0
+                            WHEN com.familiemunshi.service.enums.ProductClassificationLevel.PARENT_CATEGORY THEN 1
+                            WHEN com.familiemunshi.service.enums.ProductClassificationLevel.SEGMENT THEN 2
+                            WHEN com.familiemunshi.service.enums.ProductClassificationLevel.CATEGORY THEN 3
+                            WHEN com.familiemunshi.service.enums.ProductClassificationLevel.SUB_CATEGORY THEN 4
+                        END,
+                        c.position
                     """,
             countQuery = """
                     SELECT COUNT(c)
@@ -116,7 +130,15 @@ public interface ProductClassificationRepository
                     )
                     SELECT *
                     FROM subtree
-                    ORDER BY level, sort_order
+                    ORDER BY
+                        CASE level
+                            WHEN 'GROUP' THEN 0
+                            WHEN 'PARENT_CATEGORY' THEN 1
+                            WHEN 'SEGMENT' THEN 2
+                            WHEN 'CATEGORY' THEN 3
+                            WHEN 'SUB_CATEGORY' THEN 4
+                        END,
+                        sort_order
                     """,
             nativeQuery = true
     )

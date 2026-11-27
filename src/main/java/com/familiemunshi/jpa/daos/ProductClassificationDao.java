@@ -56,7 +56,11 @@ public class ProductClassificationDao {
     @JoinColumn(name = "parent_id")
     private ProductClassificationDao parent;
 
-    @Column(length = 100)
+    /*
+     * Single icon column: S3 key ("public/...") for uploaded files,
+     * or a lucide-react icon name.
+     */
+    @Column(length = 255)
     private String icon;
 
     @Column(name = "sort_order", nullable = false)

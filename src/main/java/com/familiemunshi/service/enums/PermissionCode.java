@@ -52,6 +52,13 @@ public enum PermissionCode {
     BRAND_UPDATE("BRAND_UPDATE", "BRAND", "Update brands"),
     BRAND_DELETE("BRAND_DELETE", "BRAND", "Delete brands"),
 
+    // COLORWAY MANAGEMENT
+    COLORWAY_CREATE("COLORWAY_CREATE", "COLORWAY", "Create colorways"),
+    COLORWAY_VIEW("COLORWAY_VIEW", "COLORWAY", "View a colorway"),
+    COLORWAY_LIST_VIEW("COLORWAY_LIST_VIEW", "COLORWAY", "List colorways"),
+    COLORWAY_UPDATE("COLORWAY_UPDATE", "COLORWAY", "Update colorways"),
+    COLORWAY_DELETE("COLORWAY_DELETE", "COLORWAY", "Delete colorways"),
+
     // PRODUCT MANAGEMENT
     PRODUCT_CREATE("PRODUCT_CREATE", "PRODUCT", "Create products"),
     PRODUCT_READ("PRODUCT_READ", "PRODUCT", "View products"),

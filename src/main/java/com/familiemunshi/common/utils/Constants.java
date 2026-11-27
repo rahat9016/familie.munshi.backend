@@ -38,6 +38,13 @@ public class Constants {
     // BRANDS
     public static final String BRANDS = "/brands";
 
+    // COLORWAYS
+    public static final String COLORWAYS = "/colorways";
+    public static final String COLORWAY_IMAGES = "/{id}/images";
+    public static final String COLORWAY_IMAGE_ID = "/{id}/images/{imageId}";
+    public static final String COLORWAY_IMAGES_ORDER = "/{id}/images/order";
+    public static final String DEFAULT_COLOR_STANDARD = "PANTONE";
+
     public static final String PRODUCT_CLASSIFICATIONS = "/product-classifications";
     public static final String PRODUCT_CLASSIFICATION_TREE = "/tree";
     public static final String PRODUCT_CLASSIFICATION_GROUP_ID = "/{groupId}";

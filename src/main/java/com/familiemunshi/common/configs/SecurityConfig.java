@@ -39,7 +39,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
 
@@ -107,6 +107,14 @@ public class SecurityConfig {
                         // =========== BRANDS ===========
                         .requestMatchers(GET, API_BASE + BRANDS + PUBLIC).permitAll()
                         .requestMatchers(API_BASE + BRANDS, API_BASE + BRANDS + "/**").authenticated()
+
+                        // =========== COLORWAYS ===========
+                        // Fine-grained COLORWAY_* checks enforced via @PreAuthorize in ColorwayController
+                        .requestMatchers(GET, API_BASE + COLORWAYS, API_BASE + COLORWAYS + "/**").authenticated()
+                        .requestMatchers(POST, API_BASE + COLORWAYS, API_BASE + COLORWAYS + "/**").authenticated()
+                        .requestMatchers(PATCH, API_BASE + COLORWAYS + "/**").authenticated()
+                        .requestMatchers(PUT, API_BASE + COLORWAYS + "/**").authenticated()
+                        .requestMatchers(DELETE, API_BASE + COLORWAYS + "/**").authenticated()
 
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)

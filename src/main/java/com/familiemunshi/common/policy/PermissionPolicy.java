@@ -48,6 +48,12 @@ public final class PermissionPolicy {
                     PermissionCode.BRAND_UPDATE,
                     PermissionCode.BRAND_DELETE,
 
+                    PermissionCode.COLORWAY_CREATE,
+                    PermissionCode.COLORWAY_VIEW,
+                    PermissionCode.COLORWAY_LIST_VIEW,
+                    PermissionCode.COLORWAY_UPDATE,
+                    PermissionCode.COLORWAY_DELETE,
+
                     PermissionCode.USER_CREATE,
                     PermissionCode.USER_READ,
                     PermissionCode.USER_UPDATE,

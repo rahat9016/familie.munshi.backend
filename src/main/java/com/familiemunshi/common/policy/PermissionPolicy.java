@@ -60,6 +60,18 @@ public final class PermissionPolicy {
                     PermissionCode.SEASON_UPDATE,
                     PermissionCode.SEASON_DELETE,
 
+                    PermissionCode.DEPARTMENT_CREATE,
+                    PermissionCode.DEPARTMENT_VIEW,
+                    PermissionCode.DEPARTMENT_LIST_VIEW,
+                    PermissionCode.DEPARTMENT_UPDATE,
+                    PermissionCode.DEPARTMENT_DELETE,
+
+                    PermissionCode.CATEGORY_CREATE,
+                    PermissionCode.CATEGORY_VIEW,
+                    PermissionCode.CATEGORY_LIST_VIEW,
+                    PermissionCode.CATEGORY_UPDATE,
+                    PermissionCode.CATEGORY_DELETE,
+
                     PermissionCode.USER_CREATE,
                     PermissionCode.USER_READ,
                     PermissionCode.USER_UPDATE,

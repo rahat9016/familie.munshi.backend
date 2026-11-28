@@ -48,6 +48,10 @@ public class Constants {
     // SEASONS
     public static final String SEASONS = "/seasons";
 
+    // DEPARTMENTS / CATEGORIES
+    public static final String DEPARTMENTS = "/departments";
+    public static final String CATEGORIES = "/categories";
+
     public static final String PRODUCT_CLASSIFICATIONS = "/product-classifications";
     public static final String PRODUCT_CLASSIFICATION_TREE = "/tree";
     public static final String PRODUCT_CLASSIFICATION_GROUP_ID = "/{groupId}";

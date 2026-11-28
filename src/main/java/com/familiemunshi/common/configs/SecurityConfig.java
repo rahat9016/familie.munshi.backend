@@ -125,6 +125,20 @@ public class SecurityConfig {
                         .requestMatchers(PATCH, API_BASE + SEASONS + "/**").authenticated()
                         .requestMatchers(DELETE, API_BASE + SEASONS + "/**").authenticated()
 
+                        // =========== DEPARTMENTS ===========
+                        // Fine-grained DEPARTMENT_* checks enforced via @PreAuthorize in DepartmentController
+                        .requestMatchers(GET, API_BASE + DEPARTMENTS, API_BASE + DEPARTMENTS + "/**").authenticated()
+                        .requestMatchers(POST, API_BASE + DEPARTMENTS).authenticated()
+                        .requestMatchers(PATCH, API_BASE + DEPARTMENTS + "/**").authenticated()
+                        .requestMatchers(DELETE, API_BASE + DEPARTMENTS + "/**").authenticated()
+
+                        // =========== CATEGORIES ===========
+                        // Fine-grained CATEGORY_* checks enforced via @PreAuthorize in CategoryController
+                        .requestMatchers(GET, API_BASE + CATEGORIES, API_BASE + CATEGORIES + "/**").authenticated()
+                        .requestMatchers(POST, API_BASE + CATEGORIES).authenticated()
+                        .requestMatchers(PATCH, API_BASE + CATEGORIES + "/**").authenticated()
+                        .requestMatchers(DELETE, API_BASE + CATEGORIES + "/**").authenticated()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)
                         .authenticated().requestMatchers(GET, API_BASE + BRANCHES + "/**")

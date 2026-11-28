@@ -98,6 +98,8 @@ public class SecurityConfig {
 
                         .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_ROOTS).permitAll()
                         .requestMatchers(API_BASE + PRODUCT_CLASSIFICATIONS + PRODUCT_CLASSIFICATION_TREE + "/**").permitAll()
+                        // Public: active children of an active classification (storefront menus)
+                        .requestMatchers(GET, API_BASE + PRODUCT_CLASSIFICATIONS + "/*" + PRODUCT_CLASSIFICATION_CHILDREN).permitAll()
                         .requestMatchers(GET, API_BASE + PRODUCT_CLASSIFICATIONS, API_BASE + PRODUCT_CLASSIFICATIONS + "/**")
                         .authenticated()
                         .requestMatchers(POST, API_BASE + PRODUCT_CLASSIFICATIONS + "/**").authenticated()

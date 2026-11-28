@@ -202,9 +202,6 @@ public class ProductClassificationController {
         );
     }
 
-    @PreAuthorize(
-            "@permissionAuthorizationService.hasPermission(authentication, 'PRODUCT_CLASSIFICATION_VIEW')"
-    )
     @GetMapping(ID + PRODUCT_CLASSIFICATION_CHILDREN)
     @Operation(
             summary = "Get child classifications.",
@@ -213,8 +210,6 @@ public class ProductClassificationController {
                             description = "Child classifications retrieved."),
                     @ApiResponse(responseCode = "404",
                             description = "Parent classification not found."),
-                    @ApiResponse(responseCode = "401",
-                            description = "Unauthenticated.")
             }
     )
     public ResponseEntity<SuccessResponse<List<ProductClassificationResponse>>>

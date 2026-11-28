@@ -54,6 +54,12 @@ public final class PermissionPolicy {
                     PermissionCode.COLORWAY_UPDATE,
                     PermissionCode.COLORWAY_DELETE,
 
+                    PermissionCode.SEASON_CREATE,
+                    PermissionCode.SEASON_VIEW,
+                    PermissionCode.SEASON_LIST_VIEW,
+                    PermissionCode.SEASON_UPDATE,
+                    PermissionCode.SEASON_DELETE,
+
                     PermissionCode.USER_CREATE,
                     PermissionCode.USER_READ,
                     PermissionCode.USER_UPDATE,

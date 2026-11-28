@@ -45,6 +45,9 @@ public class Constants {
     public static final String COLORWAY_IMAGES_ORDER = "/{id}/images/order";
     public static final String DEFAULT_COLOR_STANDARD = "PANTONE";
 
+    // SEASONS
+    public static final String SEASONS = "/seasons";
+
     public static final String PRODUCT_CLASSIFICATIONS = "/product-classifications";
     public static final String PRODUCT_CLASSIFICATION_TREE = "/tree";
     public static final String PRODUCT_CLASSIFICATION_GROUP_ID = "/{groupId}";

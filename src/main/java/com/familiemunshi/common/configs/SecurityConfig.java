@@ -118,6 +118,13 @@ public class SecurityConfig {
                         .requestMatchers(PUT, API_BASE + COLORWAYS + "/**").authenticated()
                         .requestMatchers(DELETE, API_BASE + COLORWAYS + "/**").authenticated()
 
+                        // =========== SEASONS ===========
+                        // Fine-grained SEASON_* checks enforced via @PreAuthorize in SeasonController
+                        .requestMatchers(GET, API_BASE + SEASONS, API_BASE + SEASONS + "/**").authenticated()
+                        .requestMatchers(POST, API_BASE + SEASONS).authenticated()
+                        .requestMatchers(PATCH, API_BASE + SEASONS + "/**").authenticated()
+                        .requestMatchers(DELETE, API_BASE + SEASONS + "/**").authenticated()
+
                         // =========== PUBLIC — read-only branch browsing ===========
                         .requestMatchers(GET, API_BASE + BRANCHES)
                         .authenticated().requestMatchers(GET, API_BASE + BRANCHES + "/**")

@@ -59,6 +59,13 @@ public enum PermissionCode {
     COLORWAY_UPDATE("COLORWAY_UPDATE", "COLORWAY", "Update colorways"),
     COLORWAY_DELETE("COLORWAY_DELETE", "COLORWAY", "Delete colorways"),
 
+    // SEASON MANAGEMENT
+    SEASON_CREATE("SEASON_CREATE", "SEASON", "Create seasons"),
+    SEASON_VIEW("SEASON_VIEW", "SEASON", "View a season"),
+    SEASON_LIST_VIEW("SEASON_LIST_VIEW", "SEASON", "List seasons"),
+    SEASON_UPDATE("SEASON_UPDATE", "SEASON", "Update seasons"),
+    SEASON_DELETE("SEASON_DELETE", "SEASON", "Delete seasons"),
+
     // PRODUCT MANAGEMENT
     PRODUCT_CREATE("PRODUCT_CREATE", "PRODUCT", "Create products"),
     PRODUCT_READ("PRODUCT_READ", "PRODUCT", "View products"),

@@ -20,6 +20,7 @@ public class ProductClassificationMapper {
                 .id(dao.getId())
                 .code(dao.getCode())
                 .name(dao.getName())
+                .description(dao.getDescription())
                 .level(dao.getLevel())
                 .parentId(dao.getParent() != null
                         ? dao.getParent().getId()
@@ -40,6 +41,7 @@ public class ProductClassificationMapper {
                 .id(domain.id())
                 .code(domain.code())
                 .name(domain.name())
+                .description(domain.description())
                 .level(domain.level())
                 .parent(domain.parentId() != null
                         ? ProductClassificationDao.builder()
@@ -68,6 +70,7 @@ public class ProductClassificationMapper {
                     new ProductClassificationTreeResponse(
                             item.id(),
                             item.name(),
+                            item.description(),
                             item.iconType(),
                             item.lucideIconName(),
                             iconUrlResolver.apply(item),

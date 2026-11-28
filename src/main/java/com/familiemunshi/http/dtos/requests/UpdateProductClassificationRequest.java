@@ -33,6 +33,15 @@ public class UpdateProductClassificationRequest {
     private String name;
 
     @Schema(
+            description = "Description of the product classification. Omit to keep current. "
+                    + "Cannot be blank.",
+            example = "Phones, laptops, accessories and other electronic devices",
+            requiredMode = NOT_REQUIRED
+    )
+    @Size(min = 1, max = 1000, message = "Description must be 1 to 1000 characters")
+    private String description;
+
+    @Schema(
             description = "The level of the product classification",
             example = "CATEGORY",
             allowableValues = {"GROUP", "PARENT_CATEGORY", "SEGMENT", "CATEGORY", "SUB_CATEGORY"},
@@ -88,6 +97,7 @@ public class UpdateProductClassificationRequest {
     public ProductClassification toEntity() {
         return ProductClassification.builder()
                 .name(this.name)
+                .description(this.description)
                 .level(this.level)
                 .parentId(this.parentId)
                 .icon(this.icon)

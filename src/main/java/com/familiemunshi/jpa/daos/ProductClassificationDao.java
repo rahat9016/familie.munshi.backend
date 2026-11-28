@@ -48,6 +48,9 @@ public class ProductClassificationDao {
     @Column(nullable = false, length = 50)
     private String code;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private ProductClassificationLevel level;

@@ -8,6 +8,7 @@ import java.util.UUID;
 public record ProductClassificationTreeResponse(
         UUID id,
         String name,
+        String description,
         IconType iconType,
         String icon,
         String iconUrl,

@@ -13,6 +13,7 @@ public class ProductClassificationResponse {
     private UUID id;
     private String code;
     private String name;
+    private String description;
     private ProductClassificationLevel level;
     private UUID parentId;
     private String parentName;
@@ -36,6 +37,7 @@ public class ProductClassificationResponse {
         this.id = classification.id();
         this.code = classification.code();
         this.name = classification.name();
+        this.description = classification.description();
         this.level = classification.level();
         this.parentId = classification.parentId();
         this.parentName = classification.parentName();

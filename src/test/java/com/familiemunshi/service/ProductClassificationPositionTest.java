@@ -39,6 +39,7 @@ class ProductClassificationPositionTest {
     private static ProductClassification group(Integer position) {
         return ProductClassification.builder()
                 .name("Women")
+                .description("Women's clothing and accessories")
                 .level(ProductClassificationLevel.GROUP)
                 .position(position)
                 .isActive(true)
@@ -49,6 +50,7 @@ class ProductClassificationPositionTest {
         return ProductClassificationDao.builder()
                 .id(id)
                 .name("Women")
+                .description("Women's clothing and accessories")
                 .code("WOMEN")
                 .level(ProductClassificationLevel.GROUP)
                 .position(1)
@@ -103,6 +105,53 @@ class ProductClassificationPositionTest {
                 group(1).withActive(false), null);
 
         assertThat(saved.isActive()).isFalse();
+    }
+
+    @Test
+    void create_blankDescription_throwsBadRequest() {
+        assertThatThrownBy(() -> service.createProductClassification(
+                group(1).withDescription("  "), null))
+                .isInstanceOf(BadRequestException.class);
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void create_description_isTrimmedAndSaved() {
+        when(repository.existsByLevelAndPosition(ProductClassificationLevel.GROUP, 1)).thenReturn(false);
+        when(repository.existsByCodeIgnoreCase(anyString())).thenReturn(false);
+        when(repository.save(any(ProductClassificationDao.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductClassification saved = service.createProductClassification(
+                group(1).withDescription("  Women's wear  "), null);
+
+        assertThat(saved.description()).isEqualTo("Women's wear");
+    }
+
+    @Test
+    void update_blankDescription_throwsBadRequest() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.of(existingGroup(id)));
+
+        assertThatThrownBy(() -> service.updateProductClassification(
+                id, ProductClassification.builder().description(" ").build(), null, null))
+                .isInstanceOf(BadRequestException.class);
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void update_omittedDescription_keepsCurrent() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.of(existingGroup(id)));
+        when(repository.save(any(ProductClassificationDao.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductClassification updated = service.updateProductClassification(
+                id, ProductClassification.builder().build(), null, null);
+
+        assertThat(updated.description()).isEqualTo("Women's clothing and accessories");
     }
 
     @Test

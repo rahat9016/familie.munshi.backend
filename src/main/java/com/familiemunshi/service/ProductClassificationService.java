@@ -42,6 +42,7 @@ public class ProductClassificationService {
             StorageFileSupport.PRODUCT_CLASSIFICATION_ICONS;
     private static final long ICON_MAX_SIZE_KB = 512;
     private static final int ICON_URL_EXPIRY_MINUTES = 7 * 24 * 60;
+    private static final int DESCRIPTION_MAX_LENGTH = 1000;
 
     private final ProductClassificationRepository productClassificationRepository;
     private final FileStorageService fileStorageService;
@@ -52,6 +53,7 @@ public class ProductClassificationService {
     ) {
         validateIconInput(classification.icon(), iconFile);
         validateName(classification.name());
+        validateDescription(classification.description());
         validateLevel(classification.level());
         validatePosition(classification.position());
         ensurePositionAvailable(
@@ -71,6 +73,7 @@ public class ProductClassificationService {
                 ProductClassificationMapper.toDao(classification);
 
         classificationDao.setCode(code);
+        classificationDao.setDescription(classification.description().trim());
         classificationDao.setParent(parent);
         classificationDao.setActive(classification.isActive());
 
@@ -215,6 +218,11 @@ public class ProductClassificationService {
                 ? classification.name().trim()
                 : existingClassification.getName();
 
+        // null = keep current; blank is rejected by validateDescription.
+        String updatedDescription = classification.description() != null
+                ? classification.description().trim()
+                : existingClassification.getDescription();
+
         ProductClassificationLevel updatedLevel =
                 classification.level() != null
                         ? classification.level()
@@ -231,6 +239,7 @@ public class ProductClassificationService {
                 : existingClassification.getPosition();
 
         validateName(updatedName);
+        validateDescription(updatedDescription);
         validateLevel(updatedLevel);
         validatePosition(updatedPosition);
 
@@ -256,6 +265,7 @@ public class ProductClassificationService {
             existingClassification.setCode(updatedCode);
         }
         existingClassification.setName(updatedName);
+        existingClassification.setDescription(updatedDescription);
         existingClassification.setLevel(updatedLevel);
         existingClassification.setParent(updatedParent);
         existingClassification.setPosition(updatedPosition);
@@ -645,6 +655,22 @@ public class ProductClassificationService {
         if (name.trim().length() > 150) {
             throw new BadRequestException(
                     "Product classification name cannot exceed 150 characters."
+            );
+        }
+    }
+
+    private void validateDescription(String description) {
+
+        if (description == null || description.isBlank()) {
+            throw new BadRequestException(
+                    "Product classification description is required."
+            );
+        }
+
+        if (description.trim().length() > DESCRIPTION_MAX_LENGTH) {
+            throw new BadRequestException(
+                    "Product classification description cannot exceed "
+                            + DESCRIPTION_MAX_LENGTH + " characters."
             );
         }
     }

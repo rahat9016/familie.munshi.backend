@@ -20,6 +20,7 @@ public record ProductClassification(
         UUID id,
         String code,
         String name,
+        String description,
         ProductClassificationLevel level,
         UUID parentId,
         String parentName,
